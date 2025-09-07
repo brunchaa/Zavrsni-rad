@@ -7,6 +7,9 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Set the environment variable to use the FIPS BouncyCastle adapter
+Environment.SetEnvironmentVariable("ITEXT_BOUNCY_CASTLE_FACTORY_NAME", "bouncy-castle-fips");
+
 builder.Host.UseSerilog((ctx, lc) => lc.WriteTo.Console().WriteTo.File("logs/app.log", rollingInterval: RollingInterval.Day));
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

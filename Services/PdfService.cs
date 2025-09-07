@@ -1,4 +1,5 @@
-﻿using iText.Kernel.Pdf;
+﻿using iText.Bouncycastleconnector;
+using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
@@ -17,6 +18,11 @@ namespace SkladisteRobe.Services
 {
     public class PdfService
     {
+        static PdfService()
+        {
+            BouncyCastleFactoryCreator.GetFactory(); // Initialize BouncyCastle here to ensure it's registered before any PDF creation
+        }
+
         public byte[] GeneratePdfReport(Transakcija transakcija, Materijal materijal)
         {
             if (transakcija == null) throw new ArgumentNullException(nameof(transakcija));
