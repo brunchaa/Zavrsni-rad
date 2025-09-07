@@ -42,7 +42,7 @@ namespace SkladisteRobe.Services
                 {
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
                     QRCodeData qrCodeData = qrGenerator.CreateQrCode(materijal.QRCodeData, QRCodeGenerator.ECCLevel.Q);
-                    QRCode qrCode = new QRCode(qrCodeData);
+                    QRCoder.QRCode qrCode = new QRCoder.QRCode(qrCodeData);
                     Bitmap qrBitmap = qrCode.GetGraphic(20);
                     using (MemoryStream bitmapStream = new MemoryStream())
                     {

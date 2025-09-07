@@ -23,7 +23,7 @@ namespace SkladisteRobe.Controllers
         {
             QRCodeGenerator qrGenerator = new QRCodeGenerator();
             QRCodeData qrCodeData = qrGenerator.CreateQrCode($"MaterijalId:{materijalId}", QRCodeGenerator.ECCLevel.Q);
-            QRCode qrCode = new QRCode(qrCodeData);
+            QRCoder.QRCode qrCode = new QRCoder.QRCode(qrCodeData);
             Bitmap qrCodeImage = qrCode.GetGraphic(20);
             var stream = new MemoryStream();
             qrCodeImage.Save(stream, ImageFormat.Png);
