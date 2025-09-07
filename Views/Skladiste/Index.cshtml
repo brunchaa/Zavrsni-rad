@@ -2,47 +2,57 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
     ViewData["Title"] = "Skladište";
 }
 
-<h2>Skladište</h2>
+<div class="container">
+    <h2 class="mb-4">Skladište</h2>
 
-<form method="get" asp-action="Index">
+    <form method="get" asp-action="Index" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="searchString" placeholder="Pretraži stavke" class="form-control" />
+            <button type="submit" class="btn btn-primary">Pretraži</button>
+        </div>
+    </form>
+
     <div class="mb-3">
-        <input type="text" name="searchString" placeholder="Pretraži stavke" class="form-control" />
+        <a class="btn btn-primary" href="@Url.Action("RadniNalog", "Skladiste")">Radni nalog</a>
     </div>
-    <button type="submit" class="btn btn-custom mb-3">Pretraži</button>
-</form>
 
-<div class="mb-3">
-    <a class="btn btn-custom" href="@Url.Action("RadniNalog", "Skladiste")">Radni nalog</a>
-</div>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Naziv</th>
-            <th>Količina</th>
-            <th>Mjerna Jedinica</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
+    <table class="table table-striped" id="materijaliTable">
+        <thead>
             <tr>
-                <td>@item.Id</td>
-                <td>@item.Naziv</td>
-                <td>@item.Kolicina</td>
-                <td>@item.Jedinica</td>
+                <th>ID</th>
+                <th>Naziv</th>
+                <th>Količina</th>
+                <th>Mjerna Jedinica</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.Naziv</td>
+                        <td>@item.Kolicina</td>
+                        <td>@item.Jedinica</td>
+                    </tr>
+            }
+        </tbody>
+    </table>
 
-<div class="mt-4">
-    <a class="btn btn-custom" href="@Url.Action("GenerateAllPdf", "Skladiste")">Generiraj PDF svih materijala</a>
+    <div class="mt-4">
+        <a class="btn btn-primary me-2" href="@Url.Action("GenerateAllPdf", "Skladiste")">Generiraj PDF svih materijala</a>
+        <a class="btn btn-primary" href="@Url.Action("GenerateTransakcijePdf", "Skladiste")">Pregled Prošlih Transakcija</a>
+    </div>
 </div>
-<div class="mt-4">
-    <a class="btn btn-custom" href="@Url.Action("GenerateTransakcijePdf", "Skladiste")">Pregled Prošlih Transakcija</a>
-</div>
+
+@section Scripts {
+        <script>
+            // Novo: DataTables za tablicu (search, paging, sort)
+            $('#materijaliTable').DataTable({
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
+            });
+        </script>
+}

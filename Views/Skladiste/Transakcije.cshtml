@@ -1,32 +1,61 @@
-﻿@model IEnumerable<SkladisteRobe.Models.UlazIzlaz>
+﻿@model IEnumerable<SkladisteRobe.Models.Transakcija>
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
+
     ViewData["Title"] = "Prošle Transakcije";
 }
 
-<h2>Prošle Transakcije</h2>
+<div class="container">
+    <h2 class="mb-4">Prošle Transakcije</h2>
 
-@if (!Model.Any())
-{
-    <p>Nema dostupnih transakcija.</p>
-}
-else
-{
-    foreach (var transakcija in Model)
+    @if (!Model.Any())
+
     {
-        <div class="card mb-3">
-            <div class="card-header">
-                Transakcija ID: @transakcija.Id
-            </div>
-            <div class="card-body">
-                <p><strong>Materijal ID:</strong> @transakcija.MaterijalId</p>
-                <p><strong>Količina:</strong> @transakcija.Kolicina</p>
-                <p><strong>Tip operacije:</strong> @transakcija.Tip</p>
-                <p><strong>Datum:</strong> @transakcija.Datum.ToString("dd.MM.yyyy")</p>
-                <p><strong>Vrijeme:</strong> @transakcija.Datum.ToString("HH:mm:ss")</p>
-                <p><strong>Kreirao:</strong> @(transakcija.Korisnik != null ? $"{transakcija.Korisnik.Ime} {transakcija.Korisnik.Prezime}" : "Nepoznato")</p>
-                <a class="btn btn-custom" href="@Url.Action("GeneratePdf", "Skladiste", new { id = transakcija.Id })">Preuzmi PDF</a>
-            </div>
-        </div>
+            <p class="alert alert-info">Nema dostupnih transakcija.</p>
     }
+
+    else
+
+    {
+            <table class="table table-striped" id="transakcijeTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Materijal ID</th>
+                        <th>Količina</th>
+                        <th>Tip</th>
+                        <th>Datum</th>
+                        <th>Vrijeme</th>
+                        <th>Kreirao</th>
+                        <th>Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var transakcija in Model)
+                {
+                            <tr>
+                                <td>@transakcija.Id</td>
+                                <td>@transakcija.MaterijalId</td>
+                                <td>@transakcija.Kolicina</td>
+                                <td>@transakcija.Tip</td>
+                                <td>@transakcija.Datum.ToString("dd.MM.yyyy")</td>
+                                <td>@transakcija.Datum.ToString("HH:mm:ss")</td>
+                                <td>@(transakcija.Korisnik != null ? $"{transakcija.Korisnik.Ime} {transakcija.Korisnik.Prezime}" : "Nepoznato")</td>
+                                <td>
+                                    <a class="btn btn-primary btn-sm" href="@Url.Action("GeneratePdf", "Skladiste", new { id = transakcija.Id })">Preuzmi PDF</a>
+                                </td>
+                            </tr>
+                }
+                </tbody>
+            </table>
+    }
+</div>
+
+@section Scripts {
+        <script>
+            // Novo: DataTables za tablicu
+            $('#transakcijeTable').DataTable({
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
+            });
+        </script>
 }

@@ -20,5 +20,8 @@ namespace SkladisteRobe.Models
 
         [Required(ErrorMessage = "Obavezna mjerna jedinica")]
         public MjernaJedinica Jedinica { get; set; }
+
+        // Novo: Polje za QR data (npr. string sa ID-om ili JSON-om za skeniranje)
+        public string QRCodeData { get; set; }
     }
 }

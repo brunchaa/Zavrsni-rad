@@ -1,103 +1,94 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using SkladisteRobe.Data;
 using SkladisteRobe.Models;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly AppDbContext _context;
-        private readonly PasswordHasher<Korisnik> _passwordHasher;
+        private readonly UserManager<Korisnik> _userManager;
+        private readonly SignInManager<Korisnik> _signInManager;
 
-        public AccountController(AppDbContext context)
+        public AccountController(UserManager<Korisnik> userManager, SignInManager<Korisnik> signInManager)
         {
-            _context = context;
-            _passwordHasher = new PasswordHasher<Korisnik>();
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
-        // gettaj account registraciju
+        // Zadržano: Get za register
         public IActionResult Register()
         {
             return View();
         }
 
-        // postaj account registraciju
+        // Modificirano: Post za register (koristi Identity za hash i role)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(Korisnik model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (ModelState.IsValid)
             {
-                // vidi jel postoji taj username vec
-                if (_context.Korisnici.Any(k => k.Username.ToLower() == model.Username.ToLower()))
+                var user = new Korisnik
                 {
-                    ModelState.AddModelError("Username", "Korisničko ime je već zauzeto.");
-                    return View(model);
+                    UserName = model.Username,
+                    Ime = model.Ime,
+                    Prezime = model.Prezime,
+                    Role = Uloga.Zaposlenik // Default za kompatibilnost
+                };
+                var result = await _userManager.CreateAsync(user, model.Password); // Identity hashira
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, "Radnik"); // Novo: Dodaj rolu
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return RedirectToAction("Index", "Home");
                 }
-
-                //hashiraj sifru
-                model.Password = _passwordHasher.HashPassword(model, model.Password);
-                _context.Korisnici.Add(model);
-                await _context.SaveChangesAsync();
-                return RedirectToAction("Login");
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
             }
             return View(model);
         }
 
-        // gettaj account login
+        // Zadržano: Get za login
         public IActionResult Login()
         {
             return View();
         }
 
-        // postaj account login
+        // Modificirano: Post za login (koristi Identity, dodaje praćenje vremena)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(string username, string password)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
-            var user = _context.Korisnici.FirstOrDefault(k => k.Username == username);
-            if (user != null)
+            if (ModelState.IsValid)
             {
-                var result = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
-                if (result == PasswordVerificationResult.Success)
+                var result = await _signInManager.PasswordSignInAsync(model.Username, model.Password, false, false);
+                if (result.Succeeded)
                 {
-                    // kreira claimove i puno ime claim takoder
-                    var claims = new[]
-                    {
-                        new Claim(ClaimTypes.Name, user.Username),
-                        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                        new Claim("FullName", $"{user.Ime} {user.Prezime}"),
-                        new Claim(ClaimTypes.Role, user.Role.ToString())
-                    };
-
-                    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                    var principal = new ClaimsPrincipal(identity);
-
-                    // session only cookie
-                    var authProperties = new AuthenticationProperties
-                    {
-                        IsPersistent = false,
-                        ExpiresUtc = System.DateTimeOffset.UtcNow.AddMinutes(30)
-                    };
-
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+                    var user = await _userManager.FindByNameAsync(model.Username);
+                    user.LastLoginTime = DateTime.UtcNow; // Novo: Počni praćenje
+                    await _userManager.UpdateAsync(user);
                     return RedirectToAction("Index", "Home");
                 }
+                ModelState.AddModelError("", "Invalid username or password.");
             }
-            ModelState.AddModelError("", "Invalid username or password.");
-            return View();
+            return View(model);
         }
 
-        // gettaj account logout
+        // Modificirano: Logout (update duration)
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null && user.LastLoginTime.HasValue)
+            {
+                var duration = DateTime.UtcNow - user.LastLoginTime.Value;
+                user.TotalLoginDuration += duration; // Novo: Dodaj dužinu sesije
+                await _userManager.UpdateAsync(user);
+            }
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
     }

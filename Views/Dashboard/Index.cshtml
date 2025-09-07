@@ -1,0 +1,83 @@
+﻿@model dynamic
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container">
+    <h2 class="mb-4">Dashboard - Analitike</h2>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">Materijali po Kategoriji</div>
+                <div class="card-body">
+                    <canvas id="materijalChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">Transakcije po Tipu</div>
+                <div class="card-body">
+                    <canvas id="transakcijeChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">Korisničke Statistike (Login Vrijeme)</div>
+        <div class="card-body">
+            <table class="table table-striped" id="userStatsTable">
+                <thead>
+                    <tr>
+                        <th>Korisnik</th>
+                        <th>Zadnji Login</th>
+                        <th>Ukupno Vrijeme</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.UserStats)
+                    {
+                            <tr>
+                                <td>@user.UserName</td>
+                                <td>@(user.LastLoginTime?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")</td>
+                                <td>@user.TotalLoginDuration.ToString(@"hh\:mm\:ss")</td>
+                            </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+        <script>
+            // Novo: Chart.js za materijale (podaci iz modela)
+            var materijalCtx = document.getElementById('materijalChart').getContext('2d');
+            new Chart(materijalCtx, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", Model.MaterijalPoKategoriji.Select(r => "'" + r.Kategorija + "'")))],
+                    datasets: [{ label: 'Količina', data: [@Html.Raw(string.Join(",", Model.MaterijalPoKategoriji.Select(r => r.Kolicina)))], backgroundColor: 'rgba(0, 123, 255, 0.5)' }]
+                }
+            });
+
+            // Novo: Chart.js za transakcije
+            var transakcijeCtx = document.getElementById('transakcijeChart').getContext('2d');
+            new Chart(transakcijeCtx, {
+                type: 'pie',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", Model.TransakcijeStats.Select(t => "'" + t.Tip + "'")))],
+                    datasets: [{ data: [@Html.Raw(string.Join(",", Model.TransakcijeStats.Select(t => t.Broj)))], backgroundColor: ['#007bff', '#dc3545'] }]
+                }
+            });
+
+            // DataTables za user tablicu
+            $('#userStatsTable').DataTable({
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
+            });
+        </script>
+}

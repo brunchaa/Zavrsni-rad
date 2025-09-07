@@ -1,0 +1,27 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "QR Skener";
+}
+
+<div class="container mt-5">
+    <h2 class="mb-4">QR Skener (USB)</h2>
+    <p>Fokusiraj polje i skeniraj QR kod. Sistem će automatski procesirati (npr. ulaz/izlaz materijala).</p>
+    <div class="form-group">
+        <input type="text" id="qrInput" class="form-control" autofocus placeholder="Skeniraj ovdje..." />
+    </div>
+    <div id="result" class="alert alert-info mt-3" style="display:none;"></div>
+</div>
+
+@section Scripts {
+        <script>
+            $('#qrInput').on('input', function () {
+                var qrData = $(this).val();
+                if (qrData) {
+                    $.post('/QR/ProcessScan', { qrData: qrData }, function (response) {
+                        $('#result').text('Procesirano: ' + response.data).show();
+                        $('#qrInput').val('').focus();
+                    });
+                }
+            });
+        </script>
+}

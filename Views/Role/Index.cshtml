@@ -1,0 +1,54 @@
+﻿@model IEnumerable<SkladisteRobe.Models.Korisnik>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Upravljanje Rolama";
+}
+
+<div class="container">
+    <h2 class="mb-4">Upravljanje Rolama</h2>
+    <table class="table table-striped" id="roleTable">
+        <thead>
+            <tr>
+                <th>Korisnik</th>
+                <th>Trenutne Role</th>
+                <th>Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                    <tr>
+                        <td>@user.UserName</td>
+                        <td>@string.Join(", ", await UserManager.GetRolesAsync(user))</td>
+                        <td>
+                            <form asp-action="AddToRole" method="post" class="d-inline">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <select name="role" class="form-select d-inline-block w-auto">
+                                    <option value="Voditelj">Voditelj</option>
+                                    <option value="Radnik">Radnik</option>
+                                </select>
+                                <button type="submit" class="btn btn-success btn-sm">Dodaj</button>
+                            </form>
+                            <form asp-action="RemoveFromRole" method="post" class="d-inline">
+                                <input type="hidden" name="userId" value="@user.Id" />
+                                <select name="role" class="form-select d-inline-block w-auto">
+                                    <option value="Voditelj">Voditelj</option>
+                                    <option value="Radnik">Radnik</option>
+                                </select>
+                                <button type="submit" class="btn btn-danger btn-sm">Ukloni</button>
+                            </form>
+                        </td>
+                    </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+        <script>
+            $('#roleTable').DataTable({
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
+            });
+        </script>
+}

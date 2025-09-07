@@ -10,7 +10,7 @@ namespace SkladisteRobe.Models
         [Required]
         public int MaterijalId { get; set; }
 
-        // navigiraj property u materijal
+        // Navigacija u materijal (zadržano)
         public Materijal Materijal { get; set; }
 
         [Required(ErrorMessage = "Obavezna količina")]
@@ -19,14 +19,15 @@ namespace SkladisteRobe.Models
         [Required]
         public DateTime Datum { get; set; }
 
-        
         [Required]
-        public string Tip { get; set; }
+        public string Tip { get; set; } // Zadržano (npr. "Primka", "Izdaj robu")
 
         [Required]
         public int KorisnikId { get; set; }
 
-        // navigira property u korisnika
+        // Navigacija u korisnika (zadržano)
         public Korisnik Korisnik { get; set; }
+
+        // Novo: Ako treba, možeš dodati QR referencu, ali za sada zadržano
     }
 }
