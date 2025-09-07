@@ -1,0 +1,48 @@
+﻿@model IEnumerable<SkladisteRobe.Models.Materijal>
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Skladište";
+}
+
+<h2>Skladište</h2>
+
+<form method="get" asp-action="Index">
+    <div class="mb-3">
+        <input type="text" name="searchString" placeholder="Pretraži stavke" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-custom mb-3">Pretraži</button>
+</form>
+
+<div class="mb-3">
+    <a class="btn btn-custom" href="@Url.Action("RadniNalog", "Skladiste")">Radni nalog</a>
+</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Naziv</th>
+            <th>Količina</th>
+            <th>Mjerna Jedinica</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Naziv</td>
+                <td>@item.Kolicina</td>
+                <td>@item.Jedinica</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="mt-4">
+    <a class="btn btn-custom" href="@Url.Action("GenerateAllPdf", "Skladiste")">Generiraj PDF svih materijala</a>
+</div>
+<div class="mt-4">
+    <a class="btn btn-custom" href="@Url.Action("GenerateTransakcijePdf", "Skladiste")">Pregled Prošlih Transakcija</a>
+</div>

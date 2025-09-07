@@ -1,0 +1,32 @@
+﻿@model IEnumerable<SkladisteRobe.Models.UlazIzlaz>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Prošle Transakcije";
+}
+
+<h2>Prošle Transakcije</h2>
+
+@if (!Model.Any())
+{
+    <p>Nema dostupnih transakcija.</p>
+}
+else
+{
+    foreach (var transakcija in Model)
+    {
+        <div class="card mb-3">
+            <div class="card-header">
+                Transakcija ID: @transakcija.Id
+            </div>
+            <div class="card-body">
+                <p><strong>Materijal ID:</strong> @transakcija.MaterijalId</p>
+                <p><strong>Količina:</strong> @transakcija.Kolicina</p>
+                <p><strong>Tip operacije:</strong> @transakcija.Tip</p>
+                <p><strong>Datum:</strong> @transakcija.Datum.ToString("dd.MM.yyyy")</p>
+                <p><strong>Vrijeme:</strong> @transakcija.Datum.ToString("HH:mm:ss")</p>
+                <p><strong>Kreirao:</strong> @(transakcija.Korisnik != null ? $"{transakcija.Korisnik.Ime} {transakcija.Korisnik.Prezime}" : "Nepoznato")</p>
+                <a class="btn btn-custom" href="@Url.Action("GeneratePdf", "Skladiste", new { id = transakcija.Id })">Preuzmi PDF</a>
+            </div>
+        </div>
+    }
+}

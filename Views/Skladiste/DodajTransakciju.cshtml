@@ -1,0 +1,26 @@
+﻿@model SkladisteRobe.Models.UlazIzlaz
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Dodaj Transakciju";
+}
+<h2>Dodaj Transakciju</h2>
+<form asp-action="DodajTransakciju" method="post">
+    <div class="mb-3">
+        <label for="MaterijalId" class="form-label">ID Materijala</label>
+        <input type="number" class="form-control" id="MaterijalId" name="MaterijalId" required />
+    </div>
+    <div class="mb-3">
+        <label for="Kolicina" class="form-label">Količina</label>
+        <input type="number" class="form-control" id="Kolicina" name="Kolicina" required />
+    </div>
+    <div class="mb-3">
+        <!-- dva buttona za dvije vrste transakcija -->
+        <button type="submit" name="submitType" value="Ulaz" class="btn btn-custom me-2">Prijem robe</button>
+        <button type="submit" name="submitType" value="Izlaz" class="btn btn-custom">Izdavanje robe</button>
+    </div>
+</form>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

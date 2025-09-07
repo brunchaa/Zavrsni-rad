@@ -1,0 +1,31 @@
+﻿@model IEnumerable<SkladisteRobe.Models.Korisnik>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Admin - Users";
+}
+
+<h2>Popis korisnika</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Korisničko ime</th>
+            <th>Ime</th>
+            <th>Prezime</th>
+            <th>Uloga</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.Username</td>
+                <td>@user.Ime</td>
+                <td>@user.Prezime</td>
+                <td>@user.Role</td>
+            </tr>
+        }
+    </tbody>
+</table>

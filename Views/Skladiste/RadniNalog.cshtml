@@ -1,0 +1,63 @@
+﻿@model SkladisteRobe.Models.BulkTransactionViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Radni nalog";
+}
+
+<h2>Radni nalog</h2>
+
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+<form asp-controller="Skladiste" asp-action="RadniNalog" method="post" id="bulkForm">
+    <div id="itemsContainer">
+        <div class="bulk-item mb-3" data-index="0">
+            <label class="form-label">Naziv materijala</label>
+            <input type="text" name="Items[0].Naziv" class="form-control" required />
+            <label class="form-label">Količina</label>
+            <input type="number" name="Items[0].Kolicina" class="form-control" required min="1" />
+            <label class="form-label">Mjerna jedinica</label>
+            <select name="Items[0].Jedinica" class="form-control" required>
+                <option value="">Odaberi jedinicu...</option>
+                <option value="KOMAD">KOMAD</option>
+                <option value="METAR">METAR</option>
+            </select>
+            <button type="button" class="btn btn-danger removeItemBtn" style="display: none;">Ukloni stavku</button>
+        </div>
+    </div>
+
+    <button type="button" id="addItemBtn" class="btn btn-secondary mb-3">Dodaj još stavku</button>
+    <br />
+    <button type="submit" name="submitType" value="Primka" class="btn btn-custom me-2">Primka</button>
+    <button type="submit" name="submitType" value="Izdaj robu" class="btn btn-custom">Izdaj robu</button>
+</form>
+
+@section Scripts {
+    <script>
+        let itemIndex = 1;
+        document.getElementById('addItemBtn').addEventListener('click', function () {
+            const container = document.getElementById('itemsContainer');
+            const div = document.createElement('div');
+            div.classList.add('bulk-item', 'mb-3');
+            div.setAttribute('data-index', itemIndex);
+            div.innerHTML = `
+                        <label class="form-label">Naziv materijala</label>
+                        <input type="text" name="Items[${itemIndex}].Naziv" class="form-control" required />
+                        <label class="form-label">Količina</label>
+                        <input type="number" name="Items[${itemIndex}].Kolicina" class="form-control" required min="1" />
+                        <label class="form-label">Mjerna jedinica</label>
+                        <select name="Items[${itemIndex}].Jedinica" class="form-control" required>
+                            <option value="">Odaberi jedinicu...</option>
+                            <option value="KOMAD">KOMAD</option>
+                            <option value="METAR">METAR</option>
+                        </select>
+                        <button type="button" class="btn btn-danger removeItemBtn">Ukloni stavku</button>
+                    `;
+            div.querySelector('.removeItemBtn').addEventListener('click', function () {
+                container.removeChild(div);
+            });
+            container.appendChild(div);
+            itemIndex++;
+        });
+    </script>
+}
