@@ -2,7 +2,6 @@
 @{
     ViewData["Title"] = "Unos ulaza/izlaza";
 }
-
 <div class="container mt-5">
     <h2 class="mb-4">Unos ulaza/izlaza</h2>
     <form asp-action="DodajUlazIzlaz" method="post" class="card p-4 shadow">
@@ -23,7 +22,8 @@
         <button type="submit" class="btn btn-primary w-100">Spremi</button>
     </form>
 </div>
-
 @section Scripts {
-    @await Html.RenderPartialAsync("_ValidationScriptsPartial")
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

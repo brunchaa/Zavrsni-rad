@@ -20,7 +20,7 @@
             {
                     <tr>
                         <td>@user.UserName</td>
-                        <td>@string.Join(", ", await UserManager.GetRolesAsync(user))</td>
+                        <td>@string.Join(", ", user.Roles)</td>
                         <td>
                             <form asp-action="AddToRole" method="post" class="d-inline">
                                 <input type="hidden" name="userId" value="@user.Id" />

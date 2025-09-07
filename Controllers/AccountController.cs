@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using SkladisteRobe.Data;
 using SkladisteRobe.Models;
 using System.Threading.Tasks;
 
@@ -17,13 +16,11 @@ namespace SkladisteRobe.Controllers
             _signInManager = signInManager;
         }
 
-        // Zadržano: Get za register
         public IActionResult Register()
         {
             return View();
         }
 
-        // Modificirano: Post za register (koristi Identity za hash i role)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterViewModel model)
@@ -35,12 +32,12 @@ namespace SkladisteRobe.Controllers
                     UserName = model.Username,
                     Ime = model.Ime,
                     Prezime = model.Prezime,
-                    Role = Uloga.Zaposlenik // Default za kompatibilnost
+                    Role = Uloga.Zaposlenik
                 };
-                var result = await _userManager.CreateAsync(user, model.Password); // Identity hashira
+                var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "Radnik"); // Novo: Dodaj rolu
+                    await _userManager.AddToRoleAsync(user, "Radnik");
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
                 }
@@ -52,13 +49,11 @@ namespace SkladisteRobe.Controllers
             return View(model);
         }
 
-        // Zadržano: Get za login
         public IActionResult Login()
         {
             return View();
         }
 
-        // Modificirano: Post za login (koristi Identity, dodaje praćenje vremena)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -69,7 +64,7 @@ namespace SkladisteRobe.Controllers
                 if (result.Succeeded)
                 {
                     var user = await _userManager.FindByNameAsync(model.Username);
-                    user.LastLoginTime = DateTime.UtcNow; // Novo: Počni praćenje
+                    user.LastLoginTime = DateTime.UtcNow;
                     await _userManager.UpdateAsync(user);
                     return RedirectToAction("Index", "Home");
                 }
@@ -78,14 +73,13 @@ namespace SkladisteRobe.Controllers
             return View(model);
         }
 
-        // Modificirano: Logout (update duration)
         public async Task<IActionResult> Logout()
         {
             var user = await _userManager.GetUserAsync(User);
             if (user != null && user.LastLoginTime.HasValue)
             {
                 var duration = DateTime.UtcNow - user.LastLoginTime.Value;
-                user.TotalLoginDuration += duration; // Novo: Dodaj dužinu sesije
+                user.TotalLoginDuration += duration;
                 await _userManager.UpdateAsync(user);
             }
             await _signInManager.SignOutAsync();

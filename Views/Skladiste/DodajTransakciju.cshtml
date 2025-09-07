@@ -1,7 +1,6 @@
 ﻿@model SkladisteRobe.Models.Transakcija
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
     ViewData["Title"] = "Dodaj Transakciju";
 }
 <div class="container mt-5">
@@ -23,5 +22,7 @@
 </div>
 
 @section Scripts {
-    @await Html.RenderPartialAsync("_ValidationScriptsPartial")
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

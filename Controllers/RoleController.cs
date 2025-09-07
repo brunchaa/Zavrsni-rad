@@ -1,30 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using SkladisteRobe.Data;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SkladisteRobe.Models;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
     [Authorize(Roles = "Admin")]
-    public class AdminController : Controller
+    public class RoleController : Controller
     {
-        private readonly AppDbContext _context;
         private readonly UserManager<Korisnik> _userManager;
         private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-        public AdminController(AppDbContext context, UserManager<Korisnik> userManager, RoleManager<IdentityRole<int>> roleManager)
+        public RoleController(UserManager<Korisnik> userManager, RoleManager<IdentityRole<int>> roleManager)
         {
-            _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
         }
 
         public async Task<IActionResult> Index()
         {
-            var users = _context.Users.ToList();
+            var users = await _userManager.Users.ToListAsync();
             foreach (var user in users)
             {
                 user.Roles = await _userManager.GetRolesAsync(user);

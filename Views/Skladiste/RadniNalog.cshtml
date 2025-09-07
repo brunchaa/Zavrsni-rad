@@ -2,7 +2,6 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
     ViewData["Title"] = "Radni nalog";
 }
 
@@ -37,32 +36,34 @@
 </div>
 
 @section Scripts {
-        <script>
-            let itemIndex = 1;
-            document.getElementById('addItemBtn').addEventListener('click', function () {
-                const container = document.getElementById('itemsContainer');
-                const div = document.createElement('div');
-                div.classList.add('bulk-item', 'mb-3');
-                div.setAttribute('data-index', itemIndex);
-                div.innerHTML = `
-                    <label class="form-label">Naziv materijala</label>
-                    <input type="text" name="Items[${itemIndex}].Naziv" class="form-control" required />
-                    <label class="form-label">Količina</label>
-                    <input type="number" name="Items[${itemIndex}].Kolicina" class="form-control" required min="1" />
-                    <label class="form-label">Mjerna jedinica</label>
-                    <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
-                        <option value="">Odaberi jedinicu...</option>
-                        <option value="KOMAD">KOMAD</option>
-                        <option value="METAR">METAR</option>
-                    </select>
-                    <button type="button" class="btn btn-danger removeItemBtn mt-2">Ukloni stavku</button>
-                `;
-                div.querySelector('.removeItemBtn').addEventListener('click', function () {
-                    container.removeChild(div);
-                });
-                container.appendChild(div);
-                itemIndex++;
+    <script>
+        let itemIndex = 1;
+        document.getElementById('addItemBtn').addEventListener('click', function () {
+            const container = document.getElementById('itemsContainer');
+            const div = document.createElement('div');
+            div.classList.add('bulk-item', 'mb-3');
+            div.setAttribute('data-index', itemIndex);
+            div.innerHTML = `
+                <label class="form-label">Naziv materijala</label>
+                <input type="text" name="Items[${itemIndex}].Naziv" class="form-control" required />
+                <label class="form-label">Količina</label>
+                <input type="number" name="Items[${itemIndex}].Kolicina" class="form-control" required min="1" />
+                <label class="form-label">Mjerna jedinica</label>
+                <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
+                    <option value="">Odaberi jedinicu...</option>
+                    <option value="KOMAD">KOMAD</option>
+                    <option value="METAR">METAR</option>
+                </select>
+                <button type="button" class="btn btn-danger removeItemBtn mt-2">Ukloni stavku</button>
+            `;
+            div.querySelector('.removeItemBtn').addEventListener('click', function () {
+                container.removeChild(div);
             });
-        </script>
-    @await Html.RenderPartialAsync("_ValidationScriptsPartial")
+            container.appendChild(div);
+            itemIndex++;
+        });
+    </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

@@ -13,7 +13,7 @@ namespace SkladisteRobe.Models
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Obavezan naziv materijala")]
-        public string Naziv { get; set; }
+        public string? Naziv { get; set; } // Dodano ?
 
         [Required(ErrorMessage = "Obavezna količina")]
         public int Kolicina { get; set; }
@@ -21,7 +21,6 @@ namespace SkladisteRobe.Models
         [Required(ErrorMessage = "Obavezna mjerna jedinica")]
         public MjernaJedinica Jedinica { get; set; }
 
-        // Novo: Polje za QR data (npr. string sa ID-om ili JSON-om za skeniranje)
-        public string QRCodeData { get; set; }
+        public string? QRCodeData { get; set; } // Dodano ?
     }
 }

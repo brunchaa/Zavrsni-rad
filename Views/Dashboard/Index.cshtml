@@ -1,4 +1,4 @@
-﻿@model dynamic
+﻿@model SkladisteRobe.Models.DashboardViewModel
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -55,7 +55,6 @@
 
 @section Scripts {
         <script>
-            // Novo: Chart.js za materijale (podaci iz modela)
             var materijalCtx = document.getElementById('materijalChart').getContext('2d');
             new Chart(materijalCtx, {
                 type: 'bar',
@@ -65,7 +64,6 @@
                 }
             });
 
-            // Novo: Chart.js za transakcije
             var transakcijeCtx = document.getElementById('transakcijeChart').getContext('2d');
             new Chart(transakcijeCtx, {
                 type: 'pie',
@@ -75,7 +73,6 @@
                 }
             });
 
-            // DataTables za user tablicu
             $('#userStatsTable').DataTable({
                 language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
             });

@@ -16,3 +16,9 @@
         <button type="submit" class="btn btn-primary w-100">Prijava</button>
     </form>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

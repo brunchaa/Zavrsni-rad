@@ -1,173 +1,143 @@
-﻿using iTextSharp.text;
-using iTextSharp.text.pdf;
+﻿using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Kernel.Geom;
+using iText.IO.Font.Constants;
+using iText.Kernel.Font;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using SkladisteRobe.Models;
-using QRCoder; // Novo: Za generiranje QR
-using System.Drawing; // Za bitmap
+using QRCoder;
+using System.Drawing;
+using System.Drawing.Imaging;
+using iText.IO.Image;
+using iText.Kernel.Colors;
 
 namespace SkladisteRobe.Services
 {
     public class PdfService
     {
-        // Zadržano: Font path
-        private const string UnicodeFontPath = @"C:\Font\l_10646.ttf";
-
-        // Zadržano: GeneratePdfReport, unaprijeđeno sa QR ako materijal ima QRData
         public byte[] GeneratePdfReport(Transakcija transakcija, Materijal materijal)
         {
-            if (transakcija == null)
-                throw new ArgumentNullException(nameof(transakcija));
-            if (materijal == null)
-                throw new ArgumentNullException(nameof(materijal));
-
-            BaseFont baseFont = BaseFont.CreateFont(UnicodeFontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-            Font titleFont = new Font(baseFont, 18, Font.BOLD);
-            Font normalFont = new Font(baseFont, 12, Font.NORMAL);
-
+            if (transakcija == null) throw new ArgumentNullException(nameof(transakcija));
+            if (materijal == null) throw new ArgumentNullException(nameof(materijal));
             using (var ms = new MemoryStream())
             {
-                Document doc = new Document(PageSize.A4, 25, 25, 30, 30);
-                PdfWriter.GetInstance(doc, ms);
-                doc.Open();
-
+                PdfWriter writer = new PdfWriter(ms);
+                PdfDocument pdf = new PdfDocument(writer);
+                Document doc = new Document(pdf, PageSize.A4);
+                doc.SetMargins(25, 25, 30, 30);
+                PdfFont titleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                PdfFont normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
                 string naslov = transakcija.Tip == "Ulaz" ? "Radni nalog za unos robe" : "Radni nalog za otpremu robe";
-                doc.Add(new Paragraph(naslov, titleFont));
-                doc.Add(new Paragraph(" ", normalFont));
-                doc.Add(new Paragraph($"Naziv materijala: {materijal.Naziv}", normalFont));
-                doc.Add(new Paragraph($"Koli\u010Dina operacije: {transakcija.Kolicina}", normalFont));
-                doc.Add(new Paragraph($"Tip operacije: {transakcija.Tip}", normalFont));
-                doc.Add(new Paragraph($"Datum i vrijeme: {transakcija.Datum:dd.MM.yyyy HH:mm:ss}", normalFont));
-
-                // Novo: Dodaj QR ako postoji QRCodeData
+                doc.Add(new Paragraph(naslov).SetFont(titleFont).SetFontSize(18));
+                doc.Add(new Paragraph(" "));
+                doc.Add(new Paragraph("Naziv materijala: " + (materijal.Naziv ?? "N/A")).SetFont(normalFont).SetFontSize(12));
+                doc.Add(new Paragraph("Količina operacije: " + transakcija.Kolicina).SetFont(normalFont).SetFontSize(12));
+                doc.Add(new Paragraph("Tip operacije: " + (transakcija.Tip ?? "N/A")).SetFont(normalFont).SetFontSize(12));
+                doc.Add(new Paragraph("Datum i vrijeme: " + transakcija.Datum.ToString("dd.MM.yyyy HH:mm:ss")).SetFont(normalFont).SetFontSize(12));
                 if (!string.IsNullOrEmpty(materijal.QRCodeData))
                 {
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
                     QRCodeData qrCodeData = qrGenerator.CreateQrCode(materijal.QRCodeData, QRCodeGenerator.ECCLevel.Q);
                     QRCode qrCode = new QRCode(qrCodeData);
                     Bitmap qrBitmap = qrCode.GetGraphic(20);
-                    iTextSharp.text.Image qrImage = iTextSharp.text.Image.GetInstance(qrBitmap, System.Drawing.Imaging.ImageFormat.Png);
-                    qrImage.ScaleAbsolute(100f, 100f);
-                    doc.Add(new Paragraph("QR Kod materijala:"));
-                    doc.Add(qrImage);
+                    using (MemoryStream bitmapStream = new MemoryStream())
+                    {
+                        qrBitmap.Save(bitmapStream, ImageFormat.Png);
+                        bitmapStream.Position = 0;
+                        iText.Layout.Element.Image qrImage = new iText.Layout.Element.Image(ImageDataFactory.Create(bitmapStream.ToArray()));
+                        qrImage.ScaleAbsolute(100f, 100f);
+                        doc.Add(new Paragraph("QR Kod materijala:").SetFont(normalFont).SetFontSize(12));
+                        doc.Add(qrImage);
+                    }
                 }
-
                 doc.Close();
                 return ms.ToArray();
             }
         }
-
-        // Zadržano: GenerateAllMaterialsPdf
         public byte[] GenerateAllMaterialsPdf(List<Materijal> materijali)
         {
-            BaseFont baseFont = BaseFont.CreateFont(UnicodeFontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-            Font titleFont = new Font(baseFont, 18, Font.BOLD);
-            Font normalFont = new Font(baseFont, 12, Font.NORMAL);
-
             using (var ms = new MemoryStream())
             {
-                Document doc = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
-                PdfWriter.GetInstance(doc, ms);
-                doc.Open();
-
-                Paragraph title = new Paragraph("Pregled Materijala", titleFont)
+                PdfWriter writer = new PdfWriter(ms);
+                PdfDocument pdf = new PdfDocument(writer);
+                Document doc = new Document(pdf, PageSize.A4.Rotate());
+                doc.SetMargins(25, 25, 30, 30);
+                PdfFont titleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                PdfFont normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                doc.Add(new Paragraph("Pregled Materijala").SetFont(titleFont).SetFontSize(18).SetHorizontalAlignment(HorizontalAlignment.CENTER));
+                doc.Add(new Paragraph(" "));
+                Table table = new Table(3).UseAllAvailableWidth();
+                table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Naziv")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Količina")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                foreach (var m in materijali ?? new List<Materijal>())
                 {
-                    Alignment = Element.ALIGN_CENTER
-                };
-                doc.Add(title);
-                doc.Add(new Paragraph(" ", normalFont));
-
-                PdfPTable table = new PdfPTable(3) { WidthPercentage = 100 };
-                table.AddCell(new PdfPCell(new Phrase("ID", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Naziv", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Koli\u010Dina", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                foreach (var m in materijali)
-                {
-                    table.AddCell(new Phrase(m.Id.ToString(), normalFont));
-                    table.AddCell(new Phrase(m.Naziv, normalFont));
-                    table.AddCell(new Phrase(m.Kolicina.ToString(), normalFont));
+                    table.AddCell(new Paragraph(m.Id.ToString()).SetFont(normalFont).SetFontSize(12));
+                    table.AddCell(new Paragraph(m.Naziv ?? "N/A").SetFont(normalFont).SetFontSize(12));
+                    table.AddCell(new Paragraph(m.Kolicina.ToString()).SetFont(normalFont).SetFontSize(12));
                 }
                 doc.Add(table);
                 doc.Close();
                 return ms.ToArray();
             }
         }
-
-        // Zadržano: GenerateTransakcijePdf
         public byte[] GenerateTransakcijePdf(List<Transakcija> transakcije)
         {
-            BaseFont baseFont = BaseFont.CreateFont(UnicodeFontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-            Font titleFont = new Font(baseFont, 18, Font.BOLD);
-            Font normalFont = new Font(baseFont, 12, Font.NORMAL);
-
             using (var ms = new MemoryStream())
             {
-                Document doc = new Document(PageSize.A4, 25, 25, 30, 30);
-                PdfWriter.GetInstance(doc, ms);
-                doc.Open();
-
-                Paragraph title = new Paragraph("Pregled Prošlih Transakcija", titleFont)
+                PdfWriter writer = new PdfWriter(ms);
+                PdfDocument pdf = new PdfDocument(writer);
+                Document doc = new Document(pdf, PageSize.A4);
+                doc.SetMargins(25, 25, 30, 30);
+                PdfFont titleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                PdfFont normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                doc.Add(new Paragraph("Pregled Prošlih Transakcija").SetFont(titleFont).SetFontSize(18).SetHorizontalAlignment(HorizontalAlignment.CENTER));
+                doc.Add(new Paragraph(" "));
+                Table table = new Table(4).UseAllAvailableWidth();
+                table.AddHeaderCell(new Cell().Add(new Paragraph("ID")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Datum")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Vrijeme")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Kreirao")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                foreach (var t in transakcije ?? new List<Transakcija>())
                 {
-                    Alignment = Element.ALIGN_CENTER
-                };
-                doc.Add(title);
-                doc.Add(new Paragraph(" ", normalFont));
-
-                PdfPTable table = new PdfPTable(4) { WidthPercentage = 100 };
-                table.AddCell(new PdfPCell(new Phrase("ID", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Datum", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Vrijeme", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Kreirao", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                foreach (var t in transakcije)
-                {
-                    table.AddCell(new Phrase(t.Id.ToString(), normalFont));
-                    table.AddCell(new Phrase(t.Datum.ToString("dd.MM.yyyy"), normalFont));
-                    table.AddCell(new Phrase(t.Datum.ToString("HH:mm:ss"), normalFont));
-                    string creator = t.Korisnik != null ? $"{t.Korisnik.Ime} {t.Korisnik.Prezime}" : "Nepoznato";
-                    table.AddCell(new Phrase(creator, normalFont));
+                    table.AddCell(new Paragraph(t.Id.ToString()).SetFont(normalFont).SetFontSize(12));
+                    table.AddCell(new Paragraph(t.Datum.ToString("dd.MM.yyyy")).SetFont(normalFont).SetFontSize(12));
+                    table.AddCell(new Paragraph(t.Datum.ToString("HH:mm:ss")).SetFont(normalFont).SetFontSize(12));
+                    string creator = t.Korisnik != null ? $"{t.Korisnik.Ime ?? "N/A"} {t.Korisnik.Prezime ?? "N/A"}" : "Nepoznato";
+                    table.AddCell(new Paragraph(creator).SetFont(normalFont).SetFontSize(12));
                 }
                 doc.Add(table);
                 doc.Close();
                 return ms.ToArray();
             }
         }
-
-        // Zadržano: GenerateBulkTransactionPdf, unaprijeđeno sa QR ako treba (dodaj po itemu ako želiš)
         public byte[] GenerateBulkTransactionPdf(BulkTransactionViewModel model, string transactionType, string employeeName)
         {
-            BaseFont baseFont = BaseFont.CreateFont(UnicodeFontPath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED);
-            Font titleFont = new Font(baseFont, 18, Font.BOLD);
-            Font normalFont = new Font(baseFont, 12, Font.NORMAL);
-
             using (var ms = new MemoryStream())
             {
-                Document doc = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
-                PdfWriter.GetInstance(doc, ms);
-                doc.Open();
-
-                string naslov = transactionType == "Primka"
-                    ? "Radni nalog za unos robe"
-                    : "Radni nalog za otpremu robe";
-                Paragraph title = new Paragraph(naslov, titleFont)
+                PdfWriter writer = new PdfWriter(ms);
+                PdfDocument pdf = new PdfDocument(writer);
+                Document doc = new Document(pdf, PageSize.A4.Rotate());
+                doc.SetMargins(25, 25, 30, 30);
+                PdfFont titleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                PdfFont normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                string naslov = transactionType == "Primka" ? "Radni nalog za unos robe" : "Radni nalog za otpremu robe";
+                doc.Add(new Paragraph(naslov).SetFont(titleFont).SetFontSize(18).SetHorizontalAlignment(HorizontalAlignment.CENTER));
+                doc.Add(new Paragraph(" "));
+                doc.Add(new Paragraph("Kreirao: " + (employeeName ?? "N/A")).SetFont(normalFont).SetFontSize(12));
+                doc.Add(new Paragraph("Datum: " + DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")).SetFont(normalFont).SetFontSize(12));
+                doc.Add(new Paragraph(" "));
+                Table table = new Table(2).UseAllAvailableWidth();
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Naziv materijala")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                table.AddHeaderCell(new Cell().Add(new Paragraph("Količina")).SetBackgroundColor(ColorConstants.LIGHT_GRAY));
+                foreach (var item in model.Items ?? new List<BulkTransactionItemViewModel>())
                 {
-                    Alignment = Element.ALIGN_CENTER
-                };
-                doc.Add(title);
-                doc.Add(new Paragraph(" ", normalFont));
-                doc.Add(new Paragraph($"Kreirao: {employeeName}", normalFont));
-                doc.Add(new Paragraph($"Datum: {DateTime.Now:dd.MM.yyyy HH:mm:ss}", normalFont));
-                doc.Add(new Paragraph(" ", normalFont));
-
-                PdfPTable table = new PdfPTable(2) { WidthPercentage = 100 };
-                table.AddCell(new PdfPCell(new Phrase("Naziv materijala", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-                table.AddCell(new PdfPCell(new Phrase("Koli\u010Dina", normalFont)) { BackgroundColor = BaseColor.LIGHT_GRAY });
-
-                foreach (var item in model.Items)
-                {
-                    table.AddCell(new Phrase(item.Naziv, normalFont));
-                    table.AddCell(new Phrase(item.Kolicina.ToString(), normalFont));
-                    // Novo: Dodaj QR po itemu ako želiš (slično kao gore)
+                    table.AddCell(new Paragraph(item.Naziv ?? "N/A").SetFont(normalFont).SetFontSize(12));
+                    table.AddCell(new Paragraph(item.Kolicina.ToString()).SetFont(normalFont).SetFontSize(12));
                 }
                 doc.Add(table);
                 doc.Close();

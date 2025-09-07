@@ -22,11 +22,8 @@ namespace SkladisteRobe.Middleware
                 var user = await userManager.GetUserAsync(context.User);
                 if (user != null)
                 {
-                    user.LastActivityTime = DateTime.UtcNow; // Ažuriraj zadnju aktivnost
+                    user.LastActivityTime = DateTime.UtcNow;
                     await userManager.UpdateAsync(user);
-                    // Opcionalno: Dodaj u UserActivityLogs
-                    // dbContext.UserActivityLogs.Add(new UserActivityLog { UserId = user.Id.ToString(), LoginTime = DateTime.UtcNow });
-                    // await dbContext.SaveChangesAsync();
                 }
             }
 

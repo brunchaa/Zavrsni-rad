@@ -7,7 +7,6 @@
 
 <div class="container">
     <h2 class="mb-4">Popis korisnika</h2>
-
     <table class="table table-striped table-hover" id="usersTable">
         <thead class="table-dark">
             <tr>
@@ -16,9 +15,9 @@
                 <th>Ime</th>
                 <th>Prezime</th>
                 <th>Uloga</th>
-                <th>Zadnji Login</th> <!-- Novo: Kolona za praćenje -->
-                <th>Ukupno Vrijeme Ulogiran</th> <!-- Novo: Kolona za dužinu -->
-                <th>Akcije</th> <!-- Novo: Za role management -->
+                <th>Zadnji Login</th>
+                <th>Ukupno Vrijeme Ulogiran</th>
+                <th>Akcije</th>
             </tr>
         </thead>
         <tbody>
@@ -29,11 +28,10 @@
                         <td>@user.UserName</td>
                         <td>@user.Ime</td>
                         <td>@user.Prezime</td>
-                        <td>@string.Join(", ", user.Roles ?? new List<string>())</td> <!-- Novo: Prikaz Identity rola -->
-                        <td>@(user.LastLoginTime?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")</td> <!-- Novo: Prikaz login vremena -->
-                        <td>@user.TotalLoginDuration.ToString(@"hh\:mm\:ss")</td> <!-- Novo: Prikaz dužine -->
+                        <td>@string.Join(", ", user.Roles)</td>
+                        <td>@(user.LastLoginTime?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")</td>
+                        <td>@user.TotalLoginDuration.ToString(@"hh\:mm\:ss")</td>
                         <td>
-                            <!-- Novo: Forma za add role -->
                             <form asp-action="AddToRole" method="post" class="d-inline">
                                 <input type="hidden" name="userId" value="@user.Id" />
                                 <select name="role" class="form-select form-select-sm d-inline-block w-auto">
@@ -42,7 +40,6 @@
                                 </select>
                                 <button type="submit" class="btn btn-success btn-sm">Dodaj Rolu</button>
                             </form>
-                            <!-- Novo: Forma za remove role -->
                             <form asp-action="RemoveFromRole" method="post" class="d-inline">
                                 <input type="hidden" name="userId" value="@user.Id" />
                                 <select name="role" class="form-select form-select-sm d-inline-block w-auto">
@@ -60,15 +57,8 @@
 
 @section Scripts {
         <script>
-            // Novo: Inicijaliziraj DataTables za search, paging, sort (lagano za pohvatati)
             $('#usersTable').DataTable({
-                paging: true,
-                searching: true,
-                ordering: true,
-                lengthMenu: [ [5, 10, 25, -1], [5, 10, 25, "Svi"] ],
-                language: { // Hrvatski prijevod za UI
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json'
-                }
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
             });
         </script>
 }
