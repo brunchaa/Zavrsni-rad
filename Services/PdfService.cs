@@ -10,8 +10,6 @@ using System.Collections.Generic;
 using System.IO;
 using SkladisteRobe.Models;
 using QRCoder;
-using System.Drawing;
-using System.Drawing.Imaging;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 
@@ -42,17 +40,12 @@ namespace SkladisteRobe.Services
                 {
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
                     QRCodeData qrCodeData = qrGenerator.CreateQrCode(materijal.QRCodeData, QRCodeGenerator.ECCLevel.Q);
-                    QRCoder.QRCode qrCode = new QRCoder.QRCode(qrCodeData);
-                    Bitmap qrBitmap = qrCode.GetGraphic(20);
-                    using (MemoryStream bitmapStream = new MemoryStream())
-                    {
-                        qrBitmap.Save(bitmapStream, ImageFormat.Png);
-                        bitmapStream.Position = 0;
-                        iText.Layout.Element.Image qrImage = new iText.Layout.Element.Image(ImageDataFactory.Create(bitmapStream.ToArray()));
-                        qrImage.ScaleAbsolute(100f, 100f);
-                        doc.Add(new Paragraph("QR Kod materijala:").SetFont(normalFont).SetFontSize(12));
-                        doc.Add(qrImage);
-                    }
+                    PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+                    byte[] qrCodeBytes = qrCode.GetGraphic(20);
+                    iText.Layout.Element.Image qrImage = new iText.Layout.Element.Image(ImageDataFactory.Create(qrCodeBytes));
+                    qrImage.ScaleAbsolute(100f, 100f);
+                    doc.Add(new Paragraph("QR Kod materijala:").SetFont(normalFont).SetFontSize(12));
+                    doc.Add(qrImage);
                 }
                 doc.Close();
                 return ms.ToArray();
