@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Skeniraj Barkod";
+    int radniNalogId = ViewBag.RadniNalogId;
+}
+
+<h1>Skeniraj Barkod za Radni Nalog @radniNalogId</h1>
+<video id="videoElementId" width="400" height="300" autoplay></video>
+<div id="result"></div>
+
+@section Scripts {
+    <script src="https://unpkg.com/@zxing/library@latest"></script>
+    <script>
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+
+        codeReader.decodeFromVideoDevice(null, 'videoElementId', (result, err) => {
+            if (result) {
+                document.getElementById('result').innerText = 'Skenirano: ' + result.text;
+                // Automatski pošalji na server
+                fetch('/Barcode/ProcessScan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ barcodeData: result.text, radniNalogId: @radniNalogId })
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          alert('Stavka dodana u radni nalog! ID: ' + data.stavkaId);
+                          // Ovdje možeš updateati UI, npr. reloadati listu stavki AJAX-om
+                      } else {
+                          alert('Greška: ' + data.message);
+                      }
+                  });
+            }
+            if (err && !(err instanceof ZXing.NotFoundException)) {
+                console.error(err);
+            }
+        });
+    </script>
+}
