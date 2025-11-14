@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<SkladisteRobe.Models.Korisnik>
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
     ViewData["Title"] = "Admin - Users";
 }
 
@@ -23,42 +23,35 @@
         <tbody>
             @foreach (var user in Model)
             {
-                    <tr>
-                        <td>@user.Id</td>
-                        <td>@user.UserName</td>
-                        <td>@user.Ime</td>
-                        <td>@user.Prezime</td>
-                        <td>@string.Join(", ", user.Roles)</td>
-                        <td>@(user.LastLoginTime?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")</td>
-                        <td>@user.TotalLoginDuration.ToString(@"hh\:mm\:ss")</td>
-                        <td>
-                            <form asp-action="AddToRole" method="post" class="d-inline">
-                                <input type="hidden" name="userId" value="@user.Id" />
-                                <select name="role" class="form-select form-select-sm d-inline-block w-auto">
-                                    <option value="Voditelj">Voditelj</option>
-                                    <option value="Radnik">Radnik</option>
-                                </select>
-                                <button type="submit" class="btn btn-success btn-sm">Dodaj Rolu</button>
-                            </form>
-                            <form asp-action="RemoveFromRole" method="post" class="d-inline">
-                                <input type="hidden" name="userId" value="@user.Id" />
-                                <select name="role" class="form-select form-select-sm d-inline-block w-auto">
-                                    <option value="Voditelj">Voditelj</option>
-                                    <option value="Radnik">Radnik</option>
-                                </select>
-                                <button type="submit" class="btn btn-danger btn-sm">Ukloni Rolu</button>
-                            </form>
-                        </td>
-                    </tr>
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Username</td>
+                    <td>@user.Ime</td>
+                    <td>@user.Prezime</td>
+                    <td>@user.Role.ToString()</td>
+                    <td>@(user.LastLoginTime?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")</td>
+                    <td>@user.TotalLoginDuration.ToString(@"hh\:mm\:ss")</td>
+                    <td>
+                        <form asp-action="ChangeRole" method="post" class="d-inline">
+                            <!-- Novo: Jedna forma za promjenu -->
+                            <input type="hidden" name="userId" value="@user.Id" />
+                            <select name="role" class="form-select form-select-sm d-inline-block w-auto">
+                                <option value="Zaposlenik">Zaposlenik</option>
+                                <option value="Voditelj">Voditelj</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm">Promijeni Ulogu</button>
+                        </form>
+                    </td>
+                </tr>
             }
         </tbody>
     </table>
 </div>
 
 @section Scripts {
-        <script>
-            $('#usersTable').DataTable({
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
-            });
-        </script>
+    <script>
+        $('#usersTable').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
+        });
+    </script>
 }

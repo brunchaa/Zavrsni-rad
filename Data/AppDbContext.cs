@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SkladisteRobe.Models;
 
 namespace SkladisteRobe.Data
 {
-    public class AppDbContext : IdentityDbContext<Korisnik, IdentityRole<int>, int>
+    public class AppDbContext : DbContext  // Promijenjeno u DbContext (maknuli Identity)
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -21,10 +19,8 @@ namespace SkladisteRobe.Data
             modelBuilder.Entity<Korisnik>().Property(k => k.Role).HasConversion<string>();
             modelBuilder.Entity<Materijal>().Property(m => m.Jedinica).HasConversion<string>();
 
-            // Ignore non-mapped properties in Korisnik to avoid mapping errors
+            // Ignore non-mapped properties in Korisnik (samo Roles)
             modelBuilder.Entity<Korisnik>().Ignore(k => k.Roles);
-            modelBuilder.Entity<Korisnik>().Ignore(k => k.Password); // Ignore Password as Identity handles it
-            modelBuilder.Entity<Korisnik>().Ignore(k => k.Username); // Ignore if duplicating UserName; use Identity's UserName instead
         }
     }
 }

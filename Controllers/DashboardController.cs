@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
-    [Authorize(Roles = "Voditelj,Admin")]
+    [Authorize(Roles = "Voditelj,Admin")]  // Voditelj može vidjeti dashboard
     public class DashboardController : Controller
     {
         private readonly AppDbContext _context;
@@ -26,7 +26,7 @@ namespace SkladisteRobe.Controllers
                     .Select(g => new DashboardViewModel.MaterijalKategorija { Kategorija = g.Key.ToString(), Kolicina = g.Sum(m => m.Kolicina) }).ToListAsync(),
                 TransakcijeStats = await _context.Transakcije.GroupBy(t => t.Tip)
                     .Select(g => new DashboardViewModel.TransakcijaStat { Tip = g.Key, Broj = g.Count() }).ToListAsync(),
-                UserStats = await _context.Users.Select(u => new DashboardViewModel.UserStat { UserName = u.UserName, LastLoginTime = u.LastLoginTime, TotalLoginDuration = u.TotalLoginDuration }).ToListAsync()
+                UserStats = await _context.Korisnici.Select(u => new DashboardViewModel.UserStat { UserName = u.Username, LastLoginTime = u.LastLoginTime, TotalLoginDuration = u.TotalLoginDuration }).ToListAsync()
             };
 
             return View(viewModel);

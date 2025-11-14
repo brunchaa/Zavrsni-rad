@@ -2,8 +2,8 @@
 {
     public enum Uloga
     {
-        Zaposlenik, // Zadržano (mapira na Radnik)
-        Admin, // Zadržano
-        Voditelj // Novo: Za voditelja sa dashboard pristupom
+        Zaposlenik,  // Obični korisnik (bivši Radnik)
+        Voditelj,    // Voditelj sa pristupom dashboardu i skladištu
+        Admin        // Puni pristup
     }
 }

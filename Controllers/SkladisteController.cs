@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkladisteRobe.Data;
 using SkladisteRobe.Models;
@@ -7,47 +7,50 @@ using SkladisteRobe.Services;
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
-    [Authorize(Roles = "Radnik,Voditelj,Admin")] // Novo: Ograniči na role (radnik vidi samo osnovno)
+    [Authorize(Roles = "Zaposlenik,Voditelj,Admin")]  // Zaposlenik i Voditelj mogu pristupiti
     public class SkladisteController : Controller
     {
         private readonly AppDbContext _context;
         private readonly PdfService _pdfService;
 
-        public SkladisteController(AppDbContext context)
+        public SkladisteController(AppDbContext context, PdfService pdfService)
         {
             _context = context;
-            _pdfService = new PdfService();
+            _pdfService = pdfService;
         }
 
-        // Zadržano: Index sa search, unaprijeđeno sa paging ako treba (dodaj ako želiš)
-        public IActionResult Index(string searchString)
+        // Index sa search
+        public async Task<IActionResult> Index(string searchString)
         {
             var materijali = _context.Materijali.AsQueryable();
             if (!string.IsNullOrEmpty(searchString))
             {
                 materijali = materijali.Where(m => m.Naziv.Contains(searchString));
             }
-            return View(materijali.ToList());
+            return View(await materijali.ToListAsync());
         }
 
-        // Zadržano: RadniNalog
+        // RadniNalog view
         public IActionResult RadniNalog()
         {
             return View();
         }
 
-        // Zadržano: Post RadniNalog, unaprijeđeno sa boljom validacijom i QR generacijom (dodaj QRData ako treba)
+        // Post RadniNalog
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult RadniNalog(BulkTransactionViewModel model, string submitType)
+        public async Task<IActionResult> RadniNalog(BulkTransactionViewModel model, string submitType)
         {
             if (!ModelState.IsValid)
+            {
                 return View(model);
+            }
 
-            // Zadržano: Provjera duplikata
+            // Provjera duplikata
             var duplicateNames = model.Items.GroupBy(x => x.Naziv.ToLower())
                                               .Where(g => g.Count() > 1)
                                               .Select(g => g.Key)
@@ -58,17 +61,24 @@ namespace SkladisteRobe.Controllers
                 return View(model);
             }
 
-            // Zadržano: Uzmi user ID i ime (koristi Identity)
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var fullName = User.FindFirstValue("FullName") ?? "Nepoznati korisnik";
+            // Uzmi user ID i puno ime (Ime + Prezime)
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                ModelState.AddModelError("", "Ne može se identificirati korisnik.");
+                return View(model);
+            }
 
-            // Zadržano: Procesiraj items, ali dodaj QRData za novi materijal
+            var currentUser = await _context.Korisnici.FindAsync(userId);
+            var fullName = currentUser != null ? $"{currentUser.Ime} {currentUser.Prezime}" : "Nepoznati korisnik";
+
+            // Procesiraj items
             foreach (var item in model.Items)
             {
                 if (submitType == "Primka")
                 {
-                    var existingMat = _context.Materijali
-                        .FirstOrDefault(m => m.Naziv.ToLower() == item.Naziv.ToLower() && m.Jedinica == item.Jedinica);
+                    var existingMat = await _context.Materijali
+                        .FirstOrDefaultAsync(m => m.Naziv.ToLower() == item.Naziv.ToLower() && m.Jedinica == item.Jedinica);
                     if (existingMat != null)
                     {
                         existingMat.Kolicina += item.Kolicina;
@@ -78,7 +88,7 @@ namespace SkladisteRobe.Controllers
                             Kolicina = item.Kolicina,
                             Datum = DateTime.Now,
                             Tip = "Primka",
-                            KorisnikId = int.Parse(userId)
+                            KorisnikId = userId
                         });
                     }
                     else
@@ -88,24 +98,24 @@ namespace SkladisteRobe.Controllers
                             Naziv = item.Naziv,
                             Kolicina = item.Kolicina,
                             Jedinica = item.Jedinica,
-                            QRCodeData = $"Materijal:{item.Naziv}:{item.Jedinica}" // Novo: Generiraj QR data
+                            QRCodeData = $"Materijal:{item.Naziv}:{item.Jedinica}"
                         };
                         _context.Materijali.Add(newMat);
-                        _context.SaveChanges();
+                        await _context.SaveChangesAsync();
                         _context.Transakcije.Add(new Transakcija
                         {
                             MaterijalId = newMat.Id,
                             Kolicina = item.Kolicina,
                             Datum = DateTime.Now,
                             Tip = "Primka",
-                            KorisnikId = int.Parse(userId)
+                            KorisnikId = userId
                         });
                     }
                 }
                 else if (submitType == "Izdaj robu")
                 {
-                    var existingMat = _context.Materijali
-                        .FirstOrDefault(m => m.Naziv.ToLower() == item.Naziv.ToLower() && m.Jedinica == item.Jedinica);
+                    var existingMat = await _context.Materijali
+                        .FirstOrDefaultAsync(m => m.Naziv.ToLower() == item.Naziv.ToLower() && m.Jedinica == item.Jedinica);
                     if (existingMat == null)
                     {
                         ModelState.AddModelError("", $"Materijal s nazivom {item.Naziv} i jedinicom {item.Jedinica} ne postoji.");
@@ -113,7 +123,7 @@ namespace SkladisteRobe.Controllers
                     }
                     if (existingMat.Kolicina < item.Kolicina)
                     {
-                        ModelState.AddModelError("", $"Nema dovoljno količine za {item.Naziv} (jedinica: {item.Jedinica}). Trenutno ima: {existingMat.Kolicina}");
+                        ModelState.AddModelError("", $"Nema dovoljno količine za {item.Naziv} (jedinica: {item.Jedinica}). Trenutno ima: {existingMat.Kolicina}.");
                         return View(model);
                     }
                     existingMat.Kolicina -= item.Kolicina;
@@ -123,7 +133,7 @@ namespace SkladisteRobe.Controllers
                         Kolicina = item.Kolicina,
                         Datum = DateTime.Now,
                         Tip = "Izdaj robu",
-                        KorisnikId = int.Parse(userId)
+                        KorisnikId = userId
                     });
                 }
                 else
@@ -133,26 +143,26 @@ namespace SkladisteRobe.Controllers
                 }
             }
 
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
-            // Zadržano: Generiraj PDF (PdfService će dodati QR ako treba)
+            // Generiraj PDF
             var pdfBytes = _pdfService.GenerateBulkTransactionPdf(model, submitType, fullName);
             string fileName = submitType == "Primka" ? "Primka.pdf" : "IzdajRobu.pdf";
             return File(pdfBytes, "application/pdf", fileName);
         }
 
-        // Zadržano: Transakcije, unaprijeđeno sa include
-        public IActionResult Transakcije()
+        // Transakcije
+        public async Task<IActionResult> Transakcije()
         {
-            var transakcije = _context.Transakcije
+            var transakcije = await _context.Transakcije
                 .Include(t => t.Korisnik)
-                .Include(t => t.Materijal) // Novo: Include za bolji prikaz
+                .Include(t => t.Materijal)
                 .OrderByDescending(t => t.Datum)
-                .ToList();
+                .ToListAsync();
             return View(transakcije);
         }
 
-        // Zadržano: GenerateTransakcijePdf
+        // GenerateTransakcijePdf
         public IActionResult GenerateTransakcijePdf()
         {
             var transakcije = _context.Transakcije
@@ -163,7 +173,7 @@ namespace SkladisteRobe.Controllers
             return File(pdfBytes, "application/pdf", "Transakcije.pdf");
         }
 
-        // Zadržano: GeneratePdf za transakciju
+        // GeneratePdf za transakciju
         public IActionResult GeneratePdf(int id)
         {
             var transakcija = _context.Transakcije
@@ -171,12 +181,13 @@ namespace SkladisteRobe.Controllers
                 .FirstOrDefault(t => t.Id == id);
             if (transakcija == null)
                 return NotFound();
+
             var materijal = _context.Materijali.FirstOrDefault(m => m.Id == transakcija.MaterijalId);
             var pdfBytes = _pdfService.GeneratePdfReport(transakcija, materijal);
             return File(pdfBytes, "application/pdf", $"Transakcija_{transakcija.Id}.pdf");
         }
 
-        // Zadržano: GenerateAllPdf
+        // GenerateAllPdf
         public IActionResult GenerateAllPdf()
         {
             var materijali = _context.Materijali.ToList();

@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using SkladisteRobe.Data;
-using SkladisteRobe.Models;
-using System.Linq;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SkladisteRobe.Data;  // Za AppDbContext
+using SkladisteRobe.Models;  // Za Korisnik, Uloga
 using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
@@ -12,44 +11,38 @@ namespace SkladisteRobe.Controllers
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
-        private readonly UserManager<Korisnik> _userManager;
-        private readonly RoleManager<IdentityRole<int>> _roleManager;
 
-        public AdminController(AppDbContext context, UserManager<Korisnik> userManager, RoleManager<IdentityRole<int>> roleManager)
+        public AdminController(AppDbContext context)
         {
             _context = context;
-            _userManager = userManager;
-            _roleManager = roleManager;
         }
 
         public async Task<IActionResult> Index()
         {
-            var users = _context.Users.ToList();
-            foreach (var user in users)
-            {
-                user.Roles = await _userManager.GetRolesAsync(user);
-            }
-            return View(users);
+            var korisnici = await _context.Korisnici.ToListAsync();
+            return View(korisnici);
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddToRole(string userId, string role)
+        public async Task<IActionResult> AddToRole(int userId, string role)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user != null && await _roleManager.RoleExistsAsync(role))
+            var korisnik = await _context.Korisnici.FindAsync(userId);
+            if (korisnik != null)
             {
-                await _userManager.AddToRoleAsync(user, role);
+                korisnik.Role = Enum.Parse<Uloga>(role);  // Dodaj ili promijeni ulogu (pretpostavljam single role po korisniku)
+                await _context.SaveChangesAsync();
             }
             return RedirectToAction("Index");
         }
 
         [HttpPost]
-        public async Task<IActionResult> RemoveFromRole(string userId, string role)
+        public async Task<IActionResult> RemoveFromRole(int userId, string role)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user != null)
+            var korisnik = await _context.Korisnici.FindAsync(userId);
+            if (korisnik != null && korisnik.Role.ToString() == role)
             {
-                await _userManager.RemoveFromRoleAsync(user, role);
+                korisnik.Role = Uloga.Zaposlenik;  // Reset na default ako uklanjaš ulogu
+                await _context.SaveChangesAsync();
             }
             return RedirectToAction("Index");
         }

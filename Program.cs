@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.Cookies;  // Dodano za custom authentication
 using SkladisteRobe.Data;
 using SkladisteRobe.Models;
 using SkladisteRobe.Middleware;
@@ -14,9 +14,13 @@ builder.Host.UseSerilog((ctx, lc) => lc.WriteTo.Console().WriteTo.File("logs/app
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<Korisnik, IdentityRole<int>>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
+// Maknuto: AddIdentity - umjesto toga koristimo custom cookie authentication bez hashiranja
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";  // Opcionalno
+    });
 
 builder.Services.AddControllersWithViews();
 
@@ -32,38 +36,33 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seeding block with migration to ensure database and tables exist before seeding
+// Seeding block
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    context.Database.Migrate(); // Apply migrations automatically to create tables like AspNetRoles
+    context.Database.Migrate();  // Primijeni migracije
 
-    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
-    var userManager = services.GetRequiredService<UserManager<Korisnik>>();
-
-    string[] roles = { "Admin", "Voditelj", "Radnik" };
-    foreach (var role in roles)
-    {
-        if (!await roleManager.RoleExistsAsync(role))
-        {
-            await roleManager.CreateAsync(new IdentityRole<int>(role));
-        }
-    }
-
-    var adminUser = await userManager.FindByNameAsync("admin");
+    // Seeding admina
+    var adminUser = await context.Korisnici.FirstOrDefaultAsync(k => k.Username == "admin");
     if (adminUser == null)
     {
-        adminUser = new Korisnik { UserName = "admin", Email = "admin@example.com", Ime = "Admin", Prezime = "Admin", Role = Uloga.Admin };
-        await userManager.CreateAsync(adminUser, "AdminPass123!");
-        await userManager.AddToRoleAsync(adminUser, "Admin");
+        adminUser = new Korisnik
+        {
+            Username = "admin",
+            Password = "admin123",  // Plain text
+            Ime = "Admin",
+            Prezime = "Admin",
+            Role = Uloga.Admin
+        };
+        context.Korisnici.Add(adminUser);
+        await context.SaveChangesAsync();
     }
 }
 
