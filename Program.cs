@@ -1,10 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Authentication.Cookies;  // Dodano za custom authentication
-using SkladisteRobe.Data;
-using SkladisteRobe.Models;
-using SkladisteRobe.Middleware;
+﻿using Microsoft.AspNetCore.Authentication.Cookies; // Dodano za custom authentication
+using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 using Serilog;
-
+using SkladisteRobe.Data;
+using SkladisteRobe.Middleware;
+using SkladisteRobe.Models;
+using SkladisteRobe.Services; // Dodano za PdfService
+QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
 // Set the environment variable to use the FIPS BouncyCastle adapter
@@ -19,8 +21,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied";  // Opcionalno
+        options.AccessDeniedPath = "/Account/AccessDenied"; // Opcionalno
     });
+
+// Dodano: Registracija PdfService
+builder.Services.AddScoped<PdfService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -47,8 +52,7 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    context.Database.Migrate();  // Primijeni migracije
-
+    context.Database.Migrate(); // Primijeni migracije
     // Seeding admina
     var adminUser = await context.Korisnici.FirstOrDefaultAsync(k => k.Username == "admin");
     if (adminUser == null)
@@ -56,7 +60,7 @@ using (var scope = app.Services.CreateScope())
         adminUser = new Korisnik
         {
             Username = "admin",
-            Password = "admin123",  // Plain text
+            Password = "admin123", // Plain text
             Ime = "Admin",
             Prezime = "Admin",
             Role = Uloga.Admin

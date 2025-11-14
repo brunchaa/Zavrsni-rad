@@ -1,36 +1,66 @@
 ﻿@{
     ViewData["Title"] = "Skeniraj Barkod";
-    int radniNalogId = ViewBag.RadniNalogId;
+    int? radniNalogId = ViewBag.RadniNalogId;  // Changed to nullable int? to handle null
 }
 
-<h1>Skeniraj Barkod za Radni Nalog @radniNalogId</h1>
-<video id="videoElementId" width="400" height="300" autoplay></video>
-<div id="result"></div>
+<h1>Skeniraj Barkod za @(radniNalogId.HasValue ? "Radni Nalog " + radniNalogId : "Općenito skeniranje")</h1>
+
+<!-- Opcija 1: Skeniranje kamerom -->
+<div>
+    <h3>Skeniraj kamerom</h3>
+    <video id="videoElementId" width="400" height="300" autoplay></video>
+    <div id="resultCamera"></div>
+</div>
+
+<!-- Opcija 2: Skeniranje fizičkim barkod skenerom -->
+<div style="margin-top: 20px;">
+    <h3>Skeniraj fizičkim skenerom</h3>
+    <input type="text" id="barcodeInput" placeholder="Skeniraj ovdje..." autofocus />
+    <div id="resultScanner"></div>
+</div>
 
 @section Scripts {
     <script src="https://unpkg.com/@@zxing/library@@latest"></script>
     <script>
+        // Funkcija za slanje na server
+        function sendToProcessScan(barcodeData, tip) {
+            fetch('/Barcode/ProcessScan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ barcodeData: barcodeData, tip: '@ViewBag.Tip' })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('Transakcija dodana! ID: ' + data.transakcijaId);
+                      // Opcionalno: Reset input ili reload
+                  } else {
+                      alert('Greška: ' + data.message);
+                  }
+              }).catch(error => {
+                  alert('Greška u komunikaciji: ' + error);
+              });
+        }
+
+        // Skeniranje kamerom
         const codeReader = new ZXing.BrowserMultiFormatReader();
         codeReader.decodeFromVideoDevice(null, 'videoElementId', (result, err) => {
             if (result) {
-                document.getElementById('result').innerText = 'Skenirano: ' + result.text;
-                // Automatski pošalji na server
-                fetch('/Barcode/ProcessScan', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ barcodeData: result.text, tip: '@ViewBag.Tip' })
-                }).then(response => response.json())
-                  .then(data => {
-                      if (data.success) {
-                          alert('Transakcija dodana! ID: ' + data.transakcijaId);
-                          // Ovdje možeš updateati UI, npr. reloadati listu transakcija AJAX-om
-                      } else {
-                          alert('Greška: ' + data.message);
-                      }
-                  });
+                document.getElementById('resultCamera').innerText = 'Skenirano kamerom: ' + result.text;
+                sendToProcessScan(result.text, '@ViewBag.Tip');
+                codeReader.reset(); // Stop kamera nakon skena
             }
             if (err && !(err instanceof ZXing.NotFoundException)) {
                 console.error(err);
+            }
+        });
+
+        // Skeniranje fizičkim skenerom
+        document.getElementById('barcodeInput').addEventListener('input', (event) => {
+            let input = event.target.value.trim();
+            if (input) {
+                document.getElementById('resultScanner').innerText = 'Skenirano skenerom: ' + input;
+                sendToProcessScan(input, '@ViewBag.Tip');
+                event.target.value = ''; // Reset input za sljedeći sken
             }
         });
     </script>
