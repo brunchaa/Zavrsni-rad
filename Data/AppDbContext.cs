@@ -12,6 +12,7 @@ namespace SkladisteRobe.Data
         public DbSet<Materijal> Materijali { get; set; }
         public DbSet<Transakcija> Transakcije { get; set; }
         public DbSet<UserActivityLog> UserActivityLogs { get; set; }
+        public DbSet<Korisnik> Korisnici { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
