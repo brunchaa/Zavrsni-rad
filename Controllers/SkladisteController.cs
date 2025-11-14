@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
-    [Authorize(Roles = "Zaposlenik,Voditelj,Admin")]  // Zaposlenik i Voditelj mogu pristupiti
+    [Authorize(Roles = "Zaposlenik,Voditelj,Admin")]  // Samo Voditelj i Admin mogu pristupiti
     public class SkladisteController : Controller
     {
         private readonly AppDbContext _context;
@@ -23,7 +23,6 @@ namespace SkladisteRobe.Controllers
             _pdfService = pdfService;
         }
 
-        // Index sa search
         public async Task<IActionResult> Index(string searchString)
         {
             var materijali = _context.Materijali.AsQueryable();
@@ -34,13 +33,11 @@ namespace SkladisteRobe.Controllers
             return View(await materijali.ToListAsync());
         }
 
-        // RadniNalog view
         public IActionResult RadniNalog()
         {
             return View();
         }
 
-        // Post RadniNalog
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RadniNalog(BulkTransactionViewModel model, string submitType)
@@ -50,7 +47,6 @@ namespace SkladisteRobe.Controllers
                 return View(model);
             }
 
-            // Provjera duplikata
             var duplicateNames = model.Items.GroupBy(x => x.Naziv.ToLower())
                                               .Where(g => g.Count() > 1)
                                               .Select(g => g.Key)
@@ -61,7 +57,6 @@ namespace SkladisteRobe.Controllers
                 return View(model);
             }
 
-            // Uzmi user ID i puno ime (Ime + Prezime)
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!int.TryParse(userIdClaim, out int userId))
             {
@@ -72,7 +67,6 @@ namespace SkladisteRobe.Controllers
             var currentUser = await _context.Korisnici.FindAsync(userId);
             var fullName = currentUser != null ? $"{currentUser.Ime} {currentUser.Prezime}" : "Nepoznati korisnik";
 
-            // Procesiraj items
             foreach (var item in model.Items)
             {
                 if (submitType == "Primka")
@@ -145,13 +139,11 @@ namespace SkladisteRobe.Controllers
 
             await _context.SaveChangesAsync();
 
-            // Generiraj PDF
             var pdfBytes = _pdfService.GenerateBulkTransactionPdf(model, submitType, fullName);
             string fileName = submitType == "Primka" ? "Primka.pdf" : "IzdajRobu.pdf";
             return File(pdfBytes, "application/pdf", fileName);
         }
 
-        // Transakcije
         public async Task<IActionResult> Transakcije()
         {
             var transakcije = await _context.Transakcije
@@ -162,7 +154,6 @@ namespace SkladisteRobe.Controllers
             return View(transakcije);
         }
 
-        // GenerateTransakcijePdf
         public IActionResult GenerateTransakcijePdf()
         {
             var transakcije = _context.Transakcije
@@ -173,7 +164,6 @@ namespace SkladisteRobe.Controllers
             return File(pdfBytes, "application/pdf", "Transakcije.pdf");
         }
 
-        // GeneratePdf za transakciju
         public IActionResult GeneratePdf(int id)
         {
             var transakcija = _context.Transakcije
@@ -187,7 +177,6 @@ namespace SkladisteRobe.Controllers
             return File(pdfBytes, "application/pdf", $"Transakcija_{transakcija.Id}.pdf");
         }
 
-        // GenerateAllPdf
         public IActionResult GenerateAllPdf()
         {
             var materijali = _context.Materijali.ToList();

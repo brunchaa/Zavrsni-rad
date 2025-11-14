@@ -33,7 +33,6 @@
                     <td>@user.TotalLoginDuration.ToString(@"hh\:mm\:ss")</td>
                     <td>
                         <form asp-action="ChangeRole" method="post" class="d-inline">
-                            <!-- Novo: Jedna forma za promjenu -->
                             <input type="hidden" name="userId" value="@user.Id" />
                             <select name="role" class="form-select form-select-sm d-inline-block w-auto">
                                 <option value="Zaposlenik">Zaposlenik</option>
