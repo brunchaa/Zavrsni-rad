@@ -1,10 +1,9 @@
-﻿@model SkladisteRobe.Models.BulkTransactionViewModel
-
-@{
+﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Radni nalog";
 }
-<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css"> i <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 <div class="container my-5">
     <div class="card shadow-lg border-0 rounded-3">
@@ -13,8 +12,8 @@
         </div>
         <div class="card-body p-4">
             @Html.ValidationSummary(true, "", new { @class = "text-danger alert alert-danger mb-4" })
-
             <form asp-controller="Skladiste" asp-action="RadniNalog" method="post" id="bulkForm">
+                @Html.AntiForgeryToken()  <!--  AJAX -->
                 <div id="itemsContainer">
                     <div class="bulk-item mb-4 p-3 border rounded bg-light" data-index="0">
                         <div class="row g-3">
@@ -32,7 +31,7 @@
                                     <option value="">Odaberi...</option>
                                     <option value="KOMAD">KOMAD</option>
                                     <option value="METAR">METAR</option>
-                                    <option value="m2">m2</option>  // Dodano m2
+                                    <option value="m2">m2</option>
                                 </select>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
@@ -41,28 +40,24 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="d-flex justify-content-start mb-4">
                     <button type="button" id="addItemBtn" class="btn btn-secondary me-2"><i class="fas fa-plus"></i> Dodaj stavku ručno</button>
                     <button type="button" id="scanSkenerBtn" class="btn btn-info me-2"><i class="fas fa-barcode"></i> Skeniraj skenerom</button>
                     <button type="button" id="scanCameraBtn" class="btn btn-info"><i class="fas fa-camera"></i> Skeniraj kamerom</button>
                 </div>
-
                 <div id="skenerSection" style="display: none; margin-bottom: 20px;">
                     <h4>Skeniraj fizičkim skenerom</h4>
                     <input type="text" id="barcodeInput" class="form-control" placeholder="Skeniraj ovdje..." autofocus />
                     <div id="resultScanner" class="mt-2"></div>
                 </div>
-
                 <div id="cameraSection" style="display: none; margin-bottom: 20px;">
                     <h4>Skeniraj kamerom</h4>
                     <video id="videoElementId" width="400" height="300" autoplay></video>
                     <div id="resultCamera" class="mt-2"></div>
                 </div>
-
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="submit" name="submitType" value="Primka" class="btn btn-success me-md-2"><i class="fas fa-arrow-down"></i> Primka</button>
-                    <button type="submit" name="submitType" value="Izdaj robu" class="btn btn-warning"><i class="fas fa-arrow-up"></i> Izdaj robu</button>
+                    <button type="button" id="submitPrimka" class="btn btn-success me-md-2"><i class="fas fa-arrow-down"></i> Primka</button>
+                    <button type="button" id="submitIzdaj" class="btn btn-warning"><i class="fas fa-arrow-up"></i> Izdaj robu</button>
                 </div>
             </form>
         </div>
@@ -71,10 +66,8 @@
 
 @section Scripts {
     <script src="https://unpkg.com/@@zxing/library@@latest"></script>
-
     <script>
         let itemIndex = 1;
-
         // Dodaj stavku ručno
         document.getElementById('addItemBtn').addEventListener('click', function () {
             const container = document.getElementById('itemsContainer');
@@ -85,7 +78,7 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Naziv materijala</label>
-                        <input type="text" name="Items[${itemIndex}].Naziv" class="form-control" required placeholder="Unesite naziv" />
+                        <input type="text" name="Items[${itemIndex}].Naziv" class="form-control naziv-autocomplete" required placeholder="Unesite naziv" />
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Količina</label>
@@ -97,7 +90,7 @@
                             <option value="">Odaberi...</option>
                             <option value="KOMAD">KOMAD</option>
                             <option value="METAR">METAR</option>
-                            <option value="m2">m2</option>  // Dodano m2
+                            <option value="m2">m2</option>
                         </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
@@ -122,7 +115,7 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Naziv materijala</label>
-                        <input type="text" name="Items[${itemIndex}].Naziv" value="${barcodeData}" class="form-control" required />
+                        <input type="text" name="Items[${itemIndex}].Naziv" value="${barcodeData}" class="form-control naziv-autocomplete" required />
                     </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Količina</label>
@@ -160,7 +153,7 @@
               .then(data => {
                   if (data.success) {
                       alert('Transakcija dodana! ID: ' + data.transakcijaId);
-                      addScannedItem(barcodeData);  // Dodaj stavku sa barcodeData (prilagoditi sa nazivom iz data ako controller vrati)
+                      addScannedItem(barcodeData);
                   } else {
                       alert('Greška: ' + data.message);
                   }
@@ -183,17 +176,6 @@
             startCameraScan();
         });
 
-        // Zatvori skener sekciju
-        document.getElementById('closeSkenerBtn').addEventListener('click', function () {
-            document.getElementById('skenerSection').style.display = 'none';
-        });
-
-        // Zatvori camera sekciju i stop kameru
-        document.getElementById('closeCameraBtn').addEventListener('click', function () {
-            document.getElementById('cameraSection').style.display = 'none';
-            if (codeReader) codeReader.reset();
-        });
-
         // Start camera scan
         function startCameraScan() {
             codeReader = new ZXing.BrowserMultiFormatReader();
@@ -214,32 +196,83 @@
             if (input) {
                 document.getElementById('resultScanner').innerText = 'Skenirano: ' + input;
                 processScan(input);
-                event.target.value = '';  // Reset za sljedeći sken
+                event.target.value = ''; // Reset za sljedeći sken
             }
         });
-    </script>
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
 
-    <script>
+        //  AUTOCOMPLETE
         $(document).on('focus', '.naziv-autocomplete', function () {
             $(this).autocomplete({
                 source: function (request, response) {
                     $.get("/Skladiste/SearchMaterijali?term=" + request.term, function (data) {
                         response($.map(data, function (item) {
-                            return { label: item.label + " (" + item.jedinica + ")", value: item.label, jedinica: item.jedinica };
+                            return {
+                                label: item.naziv + " (" + item.jedinica + ")",
+                                value: item.naziv,
+                                jedinica: item.jedinica
+                            };
                         }));
                     });
                 },
                 select: function (event, ui) {
                     $(this).val(ui.item.value);
-                    $(this).closest('.bulk-item').find('select[name$=".Jedinica"]').val(ui.item.jedinica);
+                    var jedinicaSelect = $(this).closest('.bulk-item').find('select[name$=".Jedinica"]');
+                    if (jedinicaSelect.length > 0) {
+                        jedinicaSelect.val(ui.item.jedinica);
+                    }
                     return false;
                 }
             });
         });
+
+        // AJAX submit za Primka i Izdaj robu
+        $('#submitPrimka').click(function () {
+            submitForm('Primka');
+        });
+
+        $('#submitIzdaj').click(function () {
+            submitForm('Izdaj robu');
+        });
+
+        function submitForm(submitType) {
+            var form = $('#bulkForm');
+            var formData = new FormData(form[0]);
+            formData.append('submitType', submitType);
+
+            $.ajax({
+                url: form.attr('action'),
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                xhr: function () {
+                    var xhr = new XMLHttpRequest();
+                    xhr.responseType = 'blob';
+                    return xhr;
+                },
+                success: function (blob, status, xhr) {
+                    var contentDisposition = xhr.getResponseHeader('Content-Disposition');
+                    var fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+
+                    // Refresh stranice
+                    location.reload();
+                },
+                error: function (xhr, status, error) {
+                    alert('Greška: ' + error);
+                }
+            });
+        }
     </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

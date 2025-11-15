@@ -5,26 +5,26 @@ using Serilog;
 using SkladisteRobe.Data;
 using SkladisteRobe.Middleware;
 using SkladisteRobe.Models;
-using SkladisteRobe.Services; // Dodano za PdfService
+using SkladisteRobe.Services; //  PdfService
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
-// Set the environment variable to use the FIPS BouncyCastle adapter
+// set da okolis koristi FIPS BouncyCastle adapter
 Environment.SetEnvironmentVariable("ITEXT_BOUNCY_CASTLE_FACTORY_NAME", "bouncy-castle-fips");
 
 builder.Host.UseSerilog((ctx, lc) => lc.WriteTo.Console().WriteTo.File("logs/app.log", rollingInterval: RollingInterval.Day));
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Maknuto: AddIdentity - umjesto toga koristimo custom cookie authentication bez hashiranja
+// koristimo custom cookie authentication bez hashiranja
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied"; // Opcionalno
+        options.AccessDeniedPath = "/Account/AccessDenied"; 
     });
 
-// Dodano: Registracija PdfService
+// Registracija PdfService
 builder.Services.AddScoped<PdfService>();
 
 builder.Services.AddControllersWithViews();

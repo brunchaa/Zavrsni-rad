@@ -62,7 +62,7 @@ namespace SkladisteRobe.Controllers
                     if (existing != null)
                     {
                         existing.Kolicina += item.Kolicina;
-                        item.MaterijalId = existing.Id;  // Postavi ID
+                        item.MaterijalId = existing.Id; // Postavi ID
                     }
                     else
                     {
@@ -73,10 +73,10 @@ namespace SkladisteRobe.Controllers
                             Jedinica = item.Jedinica
                         };
                         _context.Materijali.Add(newMat);
-                        await _context.SaveChangesAsync();  // Spremi da dobije ID
-                        item.MaterijalId = newMat.Id;  // Postavi ID
-                        newMat.QRCodeData = $"MaterijalId:{newMat.Id}";  // Automatski barkod
-                        await _context.SaveChangesAsync();  // Spremi QRCodeData
+                        await _context.SaveChangesAsync(); // Spremi da dobije ID
+                        item.MaterijalId = newMat.Id; // Postavi ID
+                        newMat.QRCodeData = $"MaterijalId:{newMat.Id}"; // Automatski barkod
+                        await _context.SaveChangesAsync(); // Spremi QRCodeData
                     }
 
                     _context.Transakcije.Add(new Transakcija
@@ -96,7 +96,7 @@ namespace SkladisteRobe.Controllers
                         return View(model);
                     }
                     existing.Kolicina -= item.Kolicina;
-                    item.MaterijalId = existing.Id;  // Postavi ID
+                    item.MaterijalId = existing.Id; // Postavi ID
 
                     _context.Transakcije.Add(new Transakcija
                     {
@@ -112,13 +112,19 @@ namespace SkladisteRobe.Controllers
             await _context.SaveChangesAsync();
 
             var pdfBytes = _pdfService.GenerateBulkTransactionPdf(model, submitType, fullName);
-            var fileName = submitType == "Primka" ? "Primka.pdf" : "IzdajRobu.pdf";
+            var currentDate = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            var fileName = submitType == "Primka" ? $"Primka_{currentDate}.pdf" : $"IzdajRobu_{currentDate}.pdf";
 
-            // Automatski preuzmi PDF
-            Response.Headers.Add("Content-Disposition", $"attachment; filename={fileName}");
-            return File(pdfBytes, "application/pdf", fileName);
-        }
+            // Dodaj pravilno encoded Content-Disposition
+            var cd = new System.Net.Mime.ContentDisposition
+            {
+                FileName = fileName,
+                Inline = false  // Za download
+            };
+            Response.Headers.Add("Content-Disposition", cd.ToString());
 
+            return File(pdfBytes, "application/pdf");
+            }
         public async Task<IActionResult> Transakcije()
         {
             var transakcije = await _context.Transakcije

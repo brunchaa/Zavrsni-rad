@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema; // Za [NotMapped]
+using System.ComponentModel.DataAnnotations.Schema; // Za NotMapped
 using System.Collections.Generic;
 
 namespace SkladisteRobe.Models
@@ -15,8 +15,7 @@ namespace SkladisteRobe.Models
         [Required(ErrorMessage = "Obavezna lozinka")]
         [DataType(DataType.Password)]
         [MinLength(8, ErrorMessage = "Lozinka mora imati najmanje 8 znakova")]
-        public string? Password { get; set; }  // Plain text za testiranje!
-
+        public string? Password { get; set; }  // Plain text za testiranje
         [Required(ErrorMessage = "Obavezno ime")]
         [RegularExpression(@"^(?!.*\d).+$", ErrorMessage = "Ime ne smije sadržavati brojeve.")]
         public string? Ime { get; set; }
@@ -34,7 +33,7 @@ namespace SkladisteRobe.Models
 
         public DateTime? LastActivityTime { get; set; }
 
-        [NotMapped] // Zadržano
+        [NotMapped] 
         public IList<string> Roles { get; set; } = new List<string>();
     }
 }

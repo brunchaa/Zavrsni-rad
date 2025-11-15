@@ -19,7 +19,7 @@
             @foreach (var user in Model)
             {
                 <tr>
-                    <td>@user.Username</td>  <!-- Ispravljeno: Username umjesto UserName -->
+                    <td>@user.Username</td>  
                     <td>@string.Join(", ", user.Roles)</td>
                     <td>
                         <form asp-action="AddToRole" method="post" class="d-inline">

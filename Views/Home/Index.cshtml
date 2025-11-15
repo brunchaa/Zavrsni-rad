@@ -1,12 +1,13 @@
 ﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Početna stranica";
+Layout = "~/Views/Shared/_Layout.cshtml";
+ViewData["Title"] = "Početna stranica";
 }
 
 @if (!User.Identity.IsAuthenticated)
 {
     <div class="container my-5 text-center">
         <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
+            <img src="~/images/istockphoto-1720037556-612x612.jpg" class="card-img-top rounded-top" alt="Ilustracija skladišta" style="height: 300px; object-fit: cover;">
             <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
                 <h2 class="mb-0">Dobrodošli u Skladište Robe</h2>
             </div>
@@ -27,17 +28,35 @@ else
             </div>
             <div class="card-body p-4">
                 <h3>Vijesti iz firme</h3>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex align-items-center">
-                        <i class="fas fa-news me-2 text-primary"></i> Nova isporuka robe stigla u skladište – provjerite inventar!
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <i class="fas fa-news me-2 text-primary"></i> Obuka za barkod skenere sljedeći tjedan.
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <i class="fas fa-news me-2 text-primary"></i> Godišnji inventar – pripremite se!
-                    </li>
-                </ul>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <img src="~/images/6299053.png" class="card-img-top" alt="Liječnički pregled" style="height: 200px; object-fit: contain;">
+                            <div class="card-body">
+                                <h5 class="card-title">Ovaj tjedan obavezni liječnički pregledi</h5>
+                                <p class="card-text">Svi zaposlenici moraju obaviti godišnji pregled. Prijavite se kod HR-a do petka.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <img src="~/images/3.jpg" class="card-img-top" alt="Obuka za barkod skenere" style="height: 200px; object-fit: contain;">
+                            <div class="card-body">
+                                <h5 class="card-title">Obuka za barkod skenere sljedeći tjedan</h5>
+                                <p class="card-text">Prijavite se za obuku kako biste poboljšali efikasnost u skladištu.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <img src="~/images/4.jfif" class="card-img-top" alt="Godišnji inventar" style="height: 200px; object-fit: contain;">
+                            <div class="card-body">
+                                <h5 class="card-title">Godišnji inventar – pripremite se!</h5>
+                                <p class="card-text">Pripreme za godišnji pregled inventara počinju uskoro. Više detalja na sastanku.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -1,85 +1,91 @@
 ﻿@model IEnumerable<SkladisteRobe.Models.Materijal>
-
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
     ViewData["Title"] = "Skladište";
 }
-    <form method="get" asp-action="Index" class="mb-3">
-        <div class="input-group">
-        <input type="text" name="Items[0].Naziv" placeholder="Pretraži stavke" class="form-control naziv-autocomplete" required />
-            <button type="submit" class="btn btn-primary">Pretraži</button>
-        </div>
-    </form>
 
-    <div class="mb-3">
-        <a class="btn btn-primary" href="@Url.Action("RadniNalog", "Skladiste")">Radni nalog</a>
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="input-group">
+        <!-- POPRAVAK: name="searchString" (controller očekuje OVO, ne Items[0].Naziv!) -->
+        <!-- Zadrži class="naziv-autocomplete" za cool sugestije pri pretrazi -->
+        <input type="text" name="searchString" placeholder="Pretraži stavke" class="form-control naziv-autocomplete" />
+        <button type="submit" class="btn btn-primary">Pretraži</button>
     </div>
+</form>
 
-    <table class="table table-striped" id="materijaliTable">
-        <thead>
+<div class="mb-3">
+    <a class="btn btn-primary" href="@Url.Action("RadniNalog", "Skladiste")">Radni nalog</a>
+</div>
+
+<table class="table table-striped" id="materijaliTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Naziv</th>
+            <th>Količina</th>
+            <th>Mjerna Jedinica</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
             <tr>
-                <th>ID</th>
-                <th>Naziv</th>
-                <th>Količina</th>
-                <th>Mjerna Jedinica</th>
+                <td>@item.Id</td>
+                <td>@item.Naziv</td>
+                <td>@item.Kolicina</td>
+                <td>@item.Jedinica</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                    <tr>
-                        <td>@item.Id</td>
-                        <td>@item.Naziv</td>
-                        <td>@item.Kolicina</td>
-                        <td>@item.Jedinica</td>
-                    </tr>
-            }
-        </tbody>
-    </table>
+        }
+    </tbody>
+</table>
 
-    <div class="mt-4">
-        <a class="btn btn-primary me-2" href="@Url.Action("GenerateAllPdf", "Skladiste")">Generiraj PDF svih materijala</a>
-        <a class="btn btn-primary" href="@Url.Action("GenerateTransakcijePdf", "Skladiste")">Pregled Prošlih Transakcija</a>
-    </div>
+<div class="mt-4">
+    <a class="btn btn-primary me-2" href="@Url.Action("GenerateAllPdf", "Skladiste")">Generiraj PDF svih materijala</a>
+    <a class="btn btn-primary" href="@Url.Action("GenerateTransakcijePdf", "Skladiste")">Pregled Prošlih Transakcija</a>
 </div>
 
 @section Scripts {
-
-        <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-        <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
-
-        <script>
-
-        <script>
-            //DataTables za tablicu (search, paging, sort)
-                $('#materijaliTable').DataTable({
-            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
-            pageLength: 25  // 25 po stranici
-        });
-        </script>
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
 
+    <script>
+        //DataTables za tablicu (search, paging, sort)
+        $('#materijaliTable').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
+            pageLength: 25 // 25 po stranici
+        });
+    </script>
+
+    <!-- AUTOCOMPLETE -->
     <script>
         $(document).on('focus', '.naziv-autocomplete', function () {
             $(this).autocomplete({
                 source: function (request, response) {
                     $.get("/Skladiste/SearchMaterijali?term=" + request.term, function (data) {
                         response($.map(data, function (item) {
-                            return { label: item.label + " (" + item.jedinica + ")", value: item.label, jedinica: item.jedinica };
+                            //  
+                            return {
+                                label: item.naziv + " (" + item.jedinica + ")",
+                                value: item.naziv,
+                                jedinica: item.jedinica
+                            };
                         }));
                     });
                 },
                 select: function (event, ui) {
                     $(this).val(ui.item.value);
-                    $(this).closest('.bulk-item').find('select[name$=".Jedinica"]').val(ui.item.jedinica);
+                    // Postavi jedinicu SAMO ako postoji select u blizini
+                    var jedinicaSelect = $(this).closest('.bulk-item').find('select[name$=".Jedinica"]');
+                    if (jedinicaSelect.length > 0) {
+                        jedinicaSelect.val(ui.item.jedinica);
+                    }
                     return false;
                 }
             });
         });
     </script>
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

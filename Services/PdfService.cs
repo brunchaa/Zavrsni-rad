@@ -16,7 +16,7 @@ namespace SkladisteRobe.Services
     {
         static PdfService()
         {
-            QuestPDF.Settings.License = LicenseType.Community;  // Besplatna licenca
+            QuestPDF.Settings.License = LicenseType.Community; 
         }
 
         public byte[] GeneratePdfReport(Transakcija transakcija, Materijal materijal)
@@ -43,7 +43,7 @@ namespace SkladisteRobe.Services
                         {
                             x.Spacing(5);
 
-                            x.Item().Text($"ID materijala: {materijal.Id}");  // Dodano ID
+                            x.Item().Text($"ID materijala: {materijal.Id}");  
                             x.Item().Text($"Naziv materijala: {materijal.Naziv ?? "N/A"}");
                             x.Item().Text($"Količina operacije: {transakcija.Kolicina}");
                             x.Item().Text($"Tip operacije: {transakcija.Tip ?? "N/A"}");

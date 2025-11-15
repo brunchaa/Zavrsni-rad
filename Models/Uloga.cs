@@ -2,7 +2,7 @@
 {
     public enum Uloga
     {
-        Zaposlenik,  // Obični korisnik (bivši Radnik)
+        Zaposlenik,  // Obični Radnik
         Voditelj,    // Voditelj sa pristupom dashboardu i skladištu
         Admin        // Puni pristup
     }

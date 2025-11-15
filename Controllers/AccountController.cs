@@ -32,7 +32,7 @@ namespace SkladisteRobe.Controllers
                 var korisnik = new Korisnik
                 {
                     Username = model.Username,
-                    Password = model.Password, // Plain text za testiranje!
+                    Password = model.Password, // Plain text za testiranje
                     Ime = model.Ime,
                     Prezime = model.Prezime,
                     Role = Uloga.Zaposlenik // Default uloga
@@ -89,7 +89,7 @@ namespace SkladisteRobe.Controllers
             return RedirectToAction("Login");
         }
 
-        // Helper metoda za custom sign in (sa claims za role)
+        // Helper metoda za custom sign in sa claims za role
         private async Task SignInKorisnik(Korisnik korisnik)
         {
             var claims = new List<Claim>

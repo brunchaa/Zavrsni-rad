@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
-    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
@@ -17,12 +16,14 @@ namespace SkladisteRobe.Controllers
             _context = context;
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             var korisnici = await _context.Korisnici.ToListAsync();
             return View(korisnici);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> ChangeRole(int userId, string role)
         {
@@ -35,6 +36,7 @@ namespace SkladisteRobe.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize(Roles = "Voditelj,Admin")]
         public async Task<IActionResult> Transakcije()
         {
             var transakcije = await _context.Transakcije

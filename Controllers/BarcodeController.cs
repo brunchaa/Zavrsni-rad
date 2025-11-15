@@ -100,7 +100,7 @@ namespace SkladisteRobe.Controllers
             if (materijal == null)
                 return NotFound("Materijal ne postoji");
 
-            var barcodeText = $"MaterijalId:{materijalId}";  // Standardni format bez zeros
+            var barcodeText = $"MaterijalId:{materijalId}";  // Standardni format bez nula
             materijal.QRCodeData = barcodeText;
             _context.SaveChanges();
 

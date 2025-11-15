@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
-    [Authorize(Roles = "Voditelj,Admin")]  // Voditelj može vidjeti
+    [Authorize(Roles = "Voditelj,Admin")]  
     public class DashboardController : Controller
     {
         private readonly AppDbContext _context;

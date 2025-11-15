@@ -8,19 +8,19 @@
 
         public class MaterijalKategorija
         {
-            public string? Kategorija { get; set; } // Dodano ?
+            public string? Kategorija { get; set; } 
             public int Kolicina { get; set; }
         }
 
         public class TransakcijaStat
         {
-            public string? Tip { get; set; } // Dodano ?
+            public string? Tip { get; set; } 
             public int Broj { get; set; }
         }
 
         public class UserStat
         {
-            public string? UserName { get; set; } // Dodano ?
+            public string? UserName { get; set; } 
             public DateTime? LastLoginTime { get; set; }
             public TimeSpan TotalLoginDuration { get; set; }
         }

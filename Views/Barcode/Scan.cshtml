@@ -5,14 +5,14 @@
 
 <h1>Skeniraj Barkod za Radni Nalog @radniNalogId</h1>
 
-<!-- Opcija 1: Skeniranje kamerom -->
+<!--  Skeniranje kamerom -->
 <div>
     <h3>Skeniraj kamerom</h3>
     <video id="videoElementId" width="400" height="300" autoplay></video>
     <div id="resultCamera"></div>
 </div>
 
-<!-- Opcija 2: Skeniranje fizičkim barkod skenerom -->
+<!--  Skeniranje fizičkim barkod skenerom -->
 <div style="margin-top: 20px;">
     <h3>Skeniraj fizičkim skenerom</h3>
     <input type="text" id="barcodeInput" placeholder="Skeniraj ovdje..." autofocus />
@@ -32,7 +32,7 @@
               .then(data => {
                   if (data.success) {
                       alert('Transakcija dodana! ID: ' + data.transakcijaId);
-                      // Opcionalno: Reset input ili reload
+                      //  Reset input ili reload
                   } else {
                       alert('Greška: ' + data.message);
                   }
