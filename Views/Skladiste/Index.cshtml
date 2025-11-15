@@ -5,13 +5,9 @@
 
     ViewData["Title"] = "Skladište";
 }
-
-<div class="container">
-    <h2 class="mb-4">Skladište</h2>
-
     <form method="get" asp-action="Index" class="mb-3">
         <div class="input-group">
-            <input type="text" name="searchString" placeholder="Pretraži stavke" class="form-control" />
+        <input type="text" name="Items[0].Naziv" placeholder="Pretraži stavke" class="form-control naziv-autocomplete" required />
             <button type="submit" class="btn btn-primary">Pretraži</button>
         </div>
     </form>
@@ -49,10 +45,41 @@
 </div>
 
 @section Scripts {
+
+        <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+
         <script>
-            // Novo: DataTables za tablicu (search, paging, sort)
-            $('#materijaliTable').DataTable({
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
-            });
+
+        <script>
+            //DataTables za tablicu (search, paging, sort)
+                $('#materijaliTable').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
+            pageLength: 25  // 25 po stranici
+        });
         </script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+
+    <script>
+        $(document).on('focus', '.naziv-autocomplete', function () {
+            $(this).autocomplete({
+                source: function (request, response) {
+                    $.get("/Skladiste/SearchMaterijali?term=" + request.term, function (data) {
+                        response($.map(data, function (item) {
+                            return { label: item.label + " (" + item.jedinica + ")", value: item.label, jedinica: item.jedinica };
+                        }));
+                    });
+                },
+                select: function (event, ui) {
+                    $(this).val(ui.item.value);
+                    $(this).closest('.bulk-item').find('select[name$=".Jedinica"]').val(ui.item.jedinica);
+                    return false;
+                }
+            });
+        });
+    </script>
 }

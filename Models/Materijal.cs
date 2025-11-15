@@ -6,7 +6,7 @@ namespace SkladisteRobe.Models
     {
         KOMAD,
         METAR,
-        M2
+        m2
     }
 
     public class Materijal
@@ -23,5 +23,6 @@ namespace SkladisteRobe.Models
         public MjernaJedinica Jedinica { get; set; }
 
         public string? QRCodeData { get; set; } // Dodano ?
+
     }
 }

@@ -9,6 +9,7 @@ namespace SkladisteRobe.Models
     {
 
          public int MaterijalId { get; set; }
+
         [Required(ErrorMessage = "Naziv je obavezan")]
         [RegularExpression(@"^(?=.*\p{L}).+$", ErrorMessage = "Naziv mora sadržavati barem jedno slovo.")]
         public string Naziv { get; set; }
@@ -19,6 +20,7 @@ namespace SkladisteRobe.Models
 
         [Required(ErrorMessage = "Mjerna jedinica je obavezna")]
         public MjernaJedinica Jedinica { get; set; }
+
     }
 
     public class BulkTransactionViewModel

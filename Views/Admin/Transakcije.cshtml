@@ -1,0 +1,36 @@
+﻿@model IEnumerable<Transakcija>
+<h2>Admin - Transakcije</h2>
+<table class="table table-striped" id="adminTransakcije">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Materijal</th>
+            <th>Količina</th>
+            <th>Tip</th>
+            <th>Datum</th>
+            <th>Korisnik</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var t in Model)
+        {
+            <tr>
+                <td>@t.Id</td>
+                <td>@t.Materijal?.Naziv</td>
+                <td>@t.Kolicina</td>
+                <td>@t.Tip</td>
+                <td>@t.Datum.ToString("dd.MM.yyyy HH:mm")</td>
+                <td>@t.Korisnik?.Ime @t.Korisnik?.Prezime</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script>
+        $('#adminTransakcije').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
+            pageLength: 25
+        });
+    </script>
+}

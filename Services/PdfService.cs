@@ -43,6 +43,7 @@ namespace SkladisteRobe.Services
                         {
                             x.Spacing(5);
 
+                            x.Item().Text($"ID materijala: {materijal.Id}");  // Dodano ID
                             x.Item().Text($"Naziv materijala: {materijal.Naziv ?? "N/A"}");
                             x.Item().Text($"Količina operacije: {transakcija.Kolicina}");
                             x.Item().Text($"Tip operacije: {transakcija.Tip ?? "N/A"}");
@@ -152,14 +153,16 @@ namespace SkladisteRobe.Services
                                 columns.RelativeColumn();  // ID
                                 columns.RelativeColumn(2); // Datum
                                 columns.RelativeColumn();  // Vrijeme
+                                columns.RelativeColumn();  // Korisnik ID
                                 columns.RelativeColumn(2); // Kreirao
                             });
 
                             table.Header(header =>
                             {
-                                header.Cell().Background(Colors.Grey.Lighten1).Text("ID").Bold();
+                                header.Cell().Background(Colors.Grey.Lighten1).Text("ID Primke").Bold();
                                 header.Cell().Background(Colors.Grey.Lighten1).Text("Datum").Bold();
                                 header.Cell().Background(Colors.Grey.Lighten1).Text("Vrijeme").Bold();
+                                header.Cell().Background(Colors.Grey.Lighten1).Text("Korisnik ID").Bold();
                                 header.Cell().Background(Colors.Grey.Lighten1).Text("Kreirao").Bold();
                             });
 
@@ -168,6 +171,7 @@ namespace SkladisteRobe.Services
                                 table.Cell().Text(t.Id.ToString());
                                 table.Cell().Text(t.Datum.ToString("dd.MM.yyyy"));
                                 table.Cell().Text(t.Datum.ToString("HH:mm:ss"));
+                                table.Cell().Text(t.KorisnikId.ToString());
                                 string creator = t.Korisnik != null ? $"{t.Korisnik.Ime ?? "N/A"} {t.Korisnik.Prezime ?? "N/A"}" : "Nepoznato";
                                 table.Cell().Text(creator);
                             }
@@ -195,7 +199,7 @@ namespace SkladisteRobe.Services
                     page.Size(PageSizes.A4.Landscape());
                     page.Margin(2, Unit.Centimetre);
                     page.PageColor(Colors.White);
-                    page.DefaultTextStyle(x => x.FontSize(12));
+                    page.DefaultTextStyle(x => x.FontSize(11));
 
                     page.Header()
                         .Text(transactionType == "Primka" ? "Radni nalog za unos robe" : "Radni nalog za otpremu robe")
@@ -205,39 +209,42 @@ namespace SkladisteRobe.Services
                         .PaddingVertical(1, Unit.Centimetre)
                         .Column(x =>
                         {
-                            x.Spacing(5);
+                            x.Spacing(8);
 
-                            x.Item().Text($"Kreirao: {employeeName ?? "N/A"}");
-                            x.Item().Text($"Datum: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
-                        })
-                        .Table(table =>
-                        {
-                            table.ColumnsDefinition(columns =>
+                            x.Item().Text($"Kreirao: {employeeName ?? "N/A"}").FontSize(12);
+                            x.Item().Text($"Datum: {DateTime.Now:dd.MM.yyyy HH:mm:ss}").FontSize(12);
+
+                            x.Item().PaddingTop(10).Table(table =>
                             {
-                                columns.RelativeColumn(2); // Naziv materijala
-                                columns.RelativeColumn();  // Količina
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn();     // ID
+                                    columns.RelativeColumn(3);    // Naziv
+                                    columns.RelativeColumn();     // Količina
+                                    columns.RelativeColumn();     // Jedinica
+                                });
+
+                                table.Header(header =>
+                                {
+                                    header.Cell().Background(Colors.Grey.Lighten1).Padding(5).Text("ID").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Padding(5).Text("Naziv materijala").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Padding(5).Text("Količina").Bold();
+                                    header.Cell().Background(Colors.Grey.Lighten1).Padding(5).Text("Jedinica").Bold();
+                                });
+
+                                foreach (var item in model.Items ?? new List<BulkTransactionItemViewModel>())
+                                {
+                                    table.Cell().Padding(4).Text(item.MaterijalId.ToString());
+                                    table.Cell().Padding(4).Text(item.Naziv ?? "N/A");
+                                    table.Cell().Padding(4).Text(item.Kolicina.ToString());
+                                    table.Cell().Padding(4).Text(item.Jedinica.ToString());
+                                }
                             });
-
-                            table.Header(header =>
-                            {
-                                header.Cell().Background(Colors.Grey.Lighten1).Text("Naziv materijala").Bold();
-                                header.Cell().Background(Colors.Grey.Lighten1).Text("Količina").Bold();
-                            });
-
-                            foreach (var item in model.Items ?? new List<BulkTransactionItemViewModel>())
-                            {
-                                table.Cell().Text(item.Naziv ?? "N/A");
-                                table.Cell().Text(item.Kolicina.ToString());
-                            }
                         });
 
                     page.Footer()
                         .AlignCenter()
-                        .Text(x =>
-                        {
-                            x.Span("Stranica ");
-                            x.CurrentPageNumber();
-                        });
+                        .Text(x => x.CurrentPageNumber());
                 });
             });
 

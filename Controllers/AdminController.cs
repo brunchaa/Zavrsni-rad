@@ -29,11 +29,12 @@ namespace SkladisteRobe.Controllers
             var korisnik = await _context.Korisnici.FindAsync(userId);
             if (korisnik != null)
             {
-                korisnik.Role = Enum.Parse<Uloga>(role);  // Promijeni ulogu na odabranu
+                korisnik.Role = Enum.Parse<Uloga>(role);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction("Index");
         }
+
         public async Task<IActionResult> Transakcije()
         {
             var transakcije = await _context.Transakcije

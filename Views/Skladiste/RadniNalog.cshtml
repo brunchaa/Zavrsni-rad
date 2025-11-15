@@ -1,7 +1,10 @@
-﻿@{
+﻿@model SkladisteRobe.Models.BulkTransactionViewModel
+
+@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Radni nalog";
 }
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css"> i <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
 <div class="container my-5">
     <div class="card shadow-lg border-0 rounded-3">
@@ -13,12 +16,11 @@
 
             <form asp-controller="Skladiste" asp-action="RadniNalog" method="post" id="bulkForm">
                 <div id="itemsContainer">
-                    <!-- Default prva stavka -->
                     <div class="bulk-item mb-4 p-3 border rounded bg-light" data-index="0">
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Naziv materijala</label>
-                                <input type="text" name="Items[0].Naziv" class="form-control" required placeholder="Unesite naziv" />
+                                <input type="text" name="Items[0].Naziv" class="form-control naziv-autocomplete" required />
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label fw-bold">Količina</label>
@@ -30,7 +32,7 @@
                                     <option value="">Odaberi...</option>
                                     <option value="KOMAD">KOMAD</option>
                                     <option value="METAR">METAR</option>
-                                    <option value="M2">M2</option>
+                                    <option value="m2">m2</option>  // Dodano m2
                                 </select>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
@@ -46,27 +48,21 @@
                     <button type="button" id="scanCameraBtn" class="btn btn-info"><i class="fas fa-camera"></i> Skeniraj kamerom</button>
                 </div>
 
-                <!-- Sekcija za skeniranje skenerom (skrivena) -->
                 <div id="skenerSection" style="display: none; margin-bottom: 20px;">
                     <h4>Skeniraj fizičkim skenerom</h4>
-                    <p>Stisni gumb na skeneru i usmjeri ga na barkod – broj će se upisati ovdje. Možeš skenirati više puta bez ponovnog klika gumba.</p>
-                    <input type="text" id="barcodeInput" class="form-control" placeholder="Stisni gumb na skeneru..." autofocus />
-                    <div id="resultScanner" class="mt-2 alert alert-info"></div>
-                    <button type="button" class="btn btn-secondary mt-2" onclick="document.getElementById('skenerSection').style.display = 'none';">Zatvori</button>
+                    <input type="text" id="barcodeInput" class="form-control" placeholder="Skeniraj ovdje..." autofocus />
+                    <div id="resultScanner" class="mt-2"></div>
                 </div>
 
-                <!-- Sekcija za skeniranje kamerom (skrivena) -->
                 <div id="cameraSection" style="display: none; margin-bottom: 20px;">
                     <h4>Skeniraj kamerom</h4>
-                    <p>Drži barkod ispred kamere – app će ga pročitati automatski. Možeš skenirati više puta dok sekcija otvorena.</p>
-                    <video id="videoElementId" width="400" height="300" autoplay style="border: 1px solid black;"></video>
-                    <div id="resultCamera" class="mt-2 alert alert-info"></div>
-                    <button type="button" class="btn btn-secondary mt-2" onclick="document.getElementById('cameraSection').style.display = 'none'; if (codeReader) codeReader.reset();">Zatvori</button>
+                    <video id="videoElementId" width="400" height="300" autoplay></video>
+                    <div id="resultCamera" class="mt-2"></div>
                 </div>
 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <button type="submit" name="submitType" value="Primka" class="btn btn-success me-md-2"><i class="fas fa-arrow-down"></i> Primka</button>
-                    <button type="submit" name="submitType" value="Izdaj robu" class="btn btn-warning"><i class="fas fa-arrow-up"></i> Izdaj robe</button>
+                    <button type="submit" name="submitType" value="Izdaj robu" class="btn btn-warning"><i class="fas fa-arrow-up"></i> Izdaj robu</button>
                 </div>
             </form>
         </div>
@@ -78,37 +74,124 @@
 
     <script>
         let itemIndex = 1;
-        let codeReader = null;  // Za kameru
 
-        // Dodaj stavku ručno (zadržano)
+        // Dodaj stavku ručno
         document.getElementById('addItemBtn').addEventListener('click', function () {
-            // ... (isti kod kao prije za dodavanje ručne stavke, kopiraj iz prethodnog ako treba)
+            const container = document.getElementById('itemsContainer');
+            const div = document.createElement('div');
+            div.classList.add('bulk-item', 'mb-4', 'p-3', 'border', 'rounded', 'bg-light');
+            div.setAttribute('data-index', itemIndex);
+            div.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Naziv materijala</label>
+                        <input type="text" name="Items[${itemIndex}].Naziv" class="form-control" required placeholder="Unesite naziv" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Količina</label>
+                        <input type="number" name="Items[${itemIndex}].Kolicina" class="form-control" required min="1" placeholder="1" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Mjerna jedinica</label>
+                        <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
+                            <option value="">Odaberi...</option>
+                            <option value="KOMAD">KOMAD</option>
+                            <option value="METAR">METAR</option>
+                            <option value="m2">m2</option>  // Dodano m2
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
+                    </div>
+                </div>
+            `;
+            div.querySelector('.removeItemBtn').addEventListener('click', function () {
+                container.removeChild(div);
+            });
+            container.appendChild(div);
+            itemIndex++;
         });
 
         // Funkcija za dodavanje stavke iz skena
         function addScannedItem(barcodeData) {
-            // ... (isti kod kao prije za dodavanje stavke, prilagodi naziv/količina/jedinica ako imaš GetMaterijal)
+            const container = document.getElementById('itemsContainer');
+            const div = document.createElement('div');
+            div.classList.add('bulk-item', 'mb-4', 'p-3', 'border', 'rounded', 'bg-light');
+            div.setAttribute('data-index', itemIndex);
+            div.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Naziv materijala</label>
+                        <input type="text" name="Items[${itemIndex}].Naziv" value="${barcodeData}" class="form-control" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Količina</label>
+                        <input type="number" name="Items[${itemIndex}].Kolicina" value="1" class="form-control" required min="1" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Mjerna jedinica</label>
+                        <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
+                            <option value="">Odaberi...</option>
+                            <option value="KOMAD">KOMAD</option>
+                            <option value="METAR">METAR</option>
+                            <option value="m2">m2</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
+                    </div>
+                </div>
+            `;
+            div.querySelector('.removeItemBtn').addEventListener('click', function () {
+                container.removeChild(div);
+            });
+            container.appendChild(div);
+            itemIndex++;
         }
 
-        // Obrada skena i slanje na server
+        // Funkcija za obradu skena i slanje na server
         function processScan(barcodeData) {
-            // ... (isti kod kao prije za fetch /Barcode/ProcessScan)
+            var tip = document.querySelector('[name="submitType"]').value == 'Primka' ? 'ulaz' : 'izlaz';
+            fetch('/Barcode/ProcessScan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ barcodeData: barcodeData, tip: tip })
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      alert('Transakcija dodana! ID: ' + data.transakcijaId);
+                      addScannedItem(barcodeData);  // Dodaj stavku sa barcodeData (prilagoditi sa nazivom iz data ako controller vrati)
+                  } else {
+                      alert('Greška: ' + data.message);
+                  }
+              }).catch(error => {
+                  alert('Greška: ' + error);
+              });
         }
 
         // Skeniraj skenerom - pokaži sekciju i fokusiraj input
         document.getElementById('scanSkenerBtn').addEventListener('click', function () {
-            const skenerSection = document.getElementById('skenerSection');
-            skenerSection.style.display = 'block';
+            document.getElementById('skenerSection').style.display = 'block';
             document.getElementById('barcodeInput').focus();
             document.getElementById('cameraSection').style.display = 'none';
         });
 
         // Skeniraj kamerom - pokaži sekciju i startaj kameru
         document.getElementById('scanCameraBtn').addEventListener('click', function () {
-            const cameraSection = document.getElementById('cameraSection');
-            cameraSection.style.display = 'block';
+            document.getElementById('cameraSection').style.display = 'block';
             document.getElementById('skenerSection').style.display = 'none';
             startCameraScan();
+        });
+
+        // Zatvori skener sekciju
+        document.getElementById('closeSkenerBtn').addEventListener('click', function () {
+            document.getElementById('skenerSection').style.display = 'none';
+        });
+
+        // Zatvori camera sekciju i stop kameru
+        document.getElementById('closeCameraBtn').addEventListener('click', function () {
+            document.getElementById('cameraSection').style.display = 'none';
+            if (codeReader) codeReader.reset();
         });
 
         // Start camera scan
@@ -134,10 +217,29 @@
                 event.target.value = '';  // Reset za sljedeći sken
             }
         });
-
-        // ... (ostali JS za addItemBtn i remove ako ih imaš)
     </script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+
+    <script>
+        $(document).on('focus', '.naziv-autocomplete', function () {
+            $(this).autocomplete({
+                source: function (request, response) {
+                    $.get("/Skladiste/SearchMaterijali?term=" + request.term, function (data) {
+                        response($.map(data, function (item) {
+                            return { label: item.label + " (" + item.jedinica + ")", value: item.label, jedinica: item.jedinica };
+                        }));
+                    });
+                },
+                select: function (event, ui) {
+                    $(this).val(ui.item.value);
+                    $(this).closest('.bulk-item').find('select[name$=".Jedinica"]').val(ui.item.jedinica);
+                    return false;
+                }
+            });
+        });
+    </script>
 }

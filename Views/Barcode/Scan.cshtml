@@ -1,9 +1,9 @@
 ﻿@{
     ViewData["Title"] = "Skeniraj Barkod";
-    int? radniNalogId = ViewBag.RadniNalogId;  // Changed to nullable int? to handle null
+    int radniNalogId = ViewBag.RadniNalogId;
 }
 
-<h1>Skeniraj Barkod za @(radniNalogId.HasValue ? "Radni Nalog " + radniNalogId : "Općenito skeniranje")</h1>
+<h1>Skeniraj Barkod za Radni Nalog @radniNalogId</h1>
 
 <!-- Opcija 1: Skeniranje kamerom -->
 <div>

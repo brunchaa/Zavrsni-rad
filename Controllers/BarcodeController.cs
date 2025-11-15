@@ -1,40 +1,37 @@
-﻿
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ZXing;
 using ZXing.Common;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using SkladisteRobe.Data; // Tvoj namespace za AppDbContext
-using SkladisteRobe.Models; // Za Materijal, Transakcija, Korisnik, itd.
-using Microsoft.EntityFrameworkCore; // Za EF
-using System.Security.Claims; // Za User claims
+using SkladisteRobe.Data;
+using SkladisteRobe.Models;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace SkladisteRobe.Controllers
 {
     [Authorize(Roles = "Zaposlenik,Voditelj,Admin")]
     public class BarcodeController : Controller
     {
-        private readonly AppDbContext _context; // Tvoj DbContext
+        private readonly AppDbContext _context;
 
         public BarcodeController(AppDbContext context)
         {
             _context = context;
         }
 
-        // View za skeniranje (npr. za ulaz ili izlaz materijala)
-        public IActionResult Scan(string tip) // "ulaz" ili "izlaz" – proslijedi iz linka ili forme
+        public IActionResult Scan(string tip)
         {
             if (string.IsNullOrEmpty(tip) || (tip != "ulaz" && tip != "izlaz"))
             {
                 return BadRequest("Neispravan tip operacije.");
             }
-            ViewBag.Tip = tip; // Proslijedi u view za JS ili formu
+            ViewBag.Tip = tip;
             return View();
         }
 
-        // Obrada skeniranog barkoda – dodaje Transakciju i ažurira količinu materijala
         [HttpPost]
         public async Task<IActionResult> ProcessScan(string barcodeData, string tip)
         {
@@ -43,7 +40,6 @@ namespace SkladisteRobe.Controllers
                 if (string.IsNullOrEmpty(tip) || (tip != "ulaz" && tip != "izlaz"))
                     return Json(new { success = false, message = "Neispravan tip operacije" });
 
-                // Parsiraj podatke iz barkoda (npr. "MaterijalId:123")
                 var parts = barcodeData.Split(':');
                 if (parts.Length != 2 || parts[0] != "MaterijalId")
                     return Json(new { success = false, message = "Neispravan barkod" });
@@ -51,39 +47,34 @@ namespace SkladisteRobe.Controllers
                 if (!int.TryParse(parts[1], out int materijalId))
                     return Json(new { success = false, message = "Neispravan ID materijala" });
 
-                // Dohvati materijal iz baze
                 var materijal = await _context.Materijali.FindAsync(materijalId);
                 if (materijal == null)
                     return Json(new { success = false, message = "Materijal ne postoji" });
 
-                // Provjeri količinu za izlaz (ne smije ići u negativno)
                 if (tip == "izlaz" && materijal.Kolicina < 1)
                     return Json(new { success = false, message = "Nedovoljna količina na stanju" });
 
-                // Dohvati trenutnog korisnika iz autentifikacije
                 var korisnikIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (!int.TryParse(korisnikIdClaim, out int korisnikId) || korisnikId <= 0)
                     return Json(new { success = false, message = "Ne može se identificirati korisnik" });
 
-                var korisnik = await _context.Korisnici.FindAsync(korisnikId); // Korisnici (plural)
+                var korisnik = await _context.Korisnici.FindAsync(korisnikId);
                 if (korisnik == null)
                     return Json(new { success = false, message = "Korisnik ne postoji" });
 
-                // Kreiraj novu Transakciju sa svim podacima ispunjenim (automatski)
                 var transakcija = new Transakcija
                 {
                     MaterijalId = materijalId,
-                    Materijal = materijal, // EF će ga linkati
-                    Kolicina = 1, // Default 1; možeš dodati parametar za više
+                    Materijal = materijal,
+                    Kolicina = 1,
                     Datum = DateTime.Now,
-                    Tip = tip, // "ulaz" ili "izlaz"
+                    Tip = tip,
                     KorisnikId = korisnikId,
                     Korisnik = korisnik
                 };
 
-                _context.Transakcije.Add(transakcija); // Transakcije (plural)
+                _context.Transakcije.Add(transakcija);
 
-                // Ažuriraj količinu materijala
                 if (tip == "ulaz")
                 {
                     materijal.Kolicina += 1;
@@ -103,15 +94,14 @@ namespace SkladisteRobe.Controllers
             }
         }
 
-        // Generiranje barkoda za materijal (možeš ga pozvati iz MaterijalControllera nakon kreiranja)
         public IActionResult GenerateBarcode(int materijalId)
         {
             var materijal = _context.Materijali.Find(materijalId);
             if (materijal == null)
                 return NotFound("Materijal ne postoji");
 
-            var barcodeText = $"Materijal ID:{materijalId}";  // Ispravljeno: "MaterijalId:1" bez zeros
-            materijal.QRCodeData = barcodeText;  // Spremi u bazu
+            var barcodeText = $"MaterijalId:{materijalId}";  // Standardni format bez zeros
+            materijal.QRCodeData = barcodeText;
             _context.SaveChanges();
 
             var barcodeWriter = new BarcodeWriterPixelData
@@ -143,6 +133,5 @@ namespace SkladisteRobe.Controllers
                 return File(ms.ToArray(), "image/png", $"barkod_{materijalId}.png");
             }
         }
-
     }
 }
