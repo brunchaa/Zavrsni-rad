@@ -1,20 +1,31 @@
-﻿@{
+﻿@model LoginViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Prijava";
 }
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Prijava</h2>
-    <form asp-action="Login" method="post" class="card p-4 shadow">
-        <div class="form-group mb-3">
-            <label for="username" class="form-label">Korisničko ime</label>
-            <input type="text" name="username" class="form-control" required />
+<div class="container my-5">
+    <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
+        <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
+            <h2 class="mb-0 text-center">Prijava u Skladište Robe</h2>
         </div>
-        <div class="form-group mb-3">
-            <label for="password" class="form-label">Lozinka</label>
-            <input type="password" name="password" class="form-control" required />
+        <div class="card-body p-4">
+            <form asp-action="Login" method="post">
+                <div class="form-group mb-4">
+                    <label asp-for="Username" class="form-label fw-bold">Korisničko ime</label>
+                    <input asp-for="Username" class="form-control" placeholder="Unesite korisničko ime" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-4">
+                    <label asp-for="Password" class="form-label fw-bold">Lozinka</label>
+                    <input asp-for="Password" class="form-control" type="password" placeholder="Unesite lozinku" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-warning w-100" style="background-color: #ff6600; border-color: #ff6600;"><i class="fas fa-sign-in-alt"></i> Prijava</button>
+            </form>
         </div>
-        <button type="submit" class="btn btn-primary w-100">Prijava</button>
-    </form>
+    </div>
 </div>
 
 @section Scripts {

@@ -1,35 +1,41 @@
-﻿@model SkladisteRobe.Models.RegisterViewModel
+﻿@model RegisterViewModel
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
     ViewData["Title"] = "Registracija";
 }
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Registracija</h2>
-    <form asp-action="Register" method="post" class="card p-4 shadow">
-        <div class="form-group mb-3">
-            <label asp-for="Username" class="form-label"></label>
-            <input asp-for="Username" class="form-control" />
-            <span asp-validation-for="Username" class="text-danger"></span>
+<div class="container my-5">
+    <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
+        <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
+            <h2 class="mb-0 text-center">Registracija u Skladište Robe</h2>
         </div>
-        <div class="form-group mb-3">
-            <label asp-for="Password" class="form-label"></label>
-            <input asp-for="Password" class="form-control" type="password" />
-            <span asp-validation-for="Password" class="text-danger"></span>
+        <div class="card-body p-4">
+            <form asp-action="Register" method="post">
+                <div class="form-group mb-4">
+                    <label asp-for="Username" class="form-label fw-bold"></label>
+                    <input asp-for="Username" class="form-control" placeholder="Unesite korisničko ime" />
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-4">
+                    <label asp-for="Password" class="form-label fw-bold"></label>
+                    <input asp-for="Password" class="form-control" type="password" placeholder="Unesite lozinku" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-4">
+                    <label asp-for="Ime" class="form-label fw-bold"></label>
+                    <input asp-for="Ime" class="form-control" placeholder="Unesite ime" />
+                    <span asp-validation-for="Ime" class="text-danger"></span>
+                </div>
+                <div class="form-group mb-4">
+                    <label asp-for="Prezime" class="form-label fw-bold"></label>
+                    <input asp-for="Prezime" class="form-control" placeholder="Unesite prezime" />
+                    <span asp-validation-for="Prezime" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-warning w-100" style="background-color: #ff6600; border-color: #ff6600;"><i class="fas fa-user-plus"></i> Registriraj se</button>
+            </form>
         </div>
-        <div class="form-group mb-3">
-            <label asp-for="Ime" class="form-label"></label>
-            <input asp-for="Ime" class="form-control" />
-            <span asp-validation-for="Ime" class="text-danger"></span>
-        </div>
-        <div class="form-group mb-3">
-            <label asp-for="Prezime" class="form-label"></label>
-            <input asp-for="Prezime" class="form-control" />
-            <span asp-validation-for="Prezime" class="text-danger"></span>
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Registriraj se</button>
-    </form>
+    </div>
 </div>
 
 @section Scripts {

@@ -2,6 +2,7 @@
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using SkladisteRobe.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using ZXing;
@@ -13,6 +14,11 @@ namespace SkladisteRobe.Services
 {
     public class PdfService
     {
+        static PdfService()
+        {
+            QuestPDF.Settings.License = LicenseType.Community;  // Besplatna licenca
+        }
+
         public byte[] GeneratePdfReport(Transakcija transakcija, Materijal materijal)
         {
             if (transakcija == null) throw new ArgumentNullException(nameof(transakcija));
@@ -45,7 +51,7 @@ namespace SkladisteRobe.Services
                             if (!string.IsNullOrEmpty(materijal.QRCodeData))
                             {
                                 x.Item().Text("Barkod materijala:");
-                                x.Item().Image(GenerateBarcodeBytes(materijal.QRCodeData)).FitWidth();  // Uklonjen parametar (20) - FitWidth nema argumenata
+                                x.Item().Image(GenerateBarcodeBytes(materijal.QRCodeData)).FitWidth();
                             }
                         });
 
@@ -203,10 +209,7 @@ namespace SkladisteRobe.Services
 
                             x.Item().Text($"Kreirao: {employeeName ?? "N/A"}");
                             x.Item().Text($"Datum: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
-                        });
-
-                    page.Content()
-                        .PaddingVertical(1, Unit.Centimetre)
+                        })
                         .Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
@@ -241,7 +244,7 @@ namespace SkladisteRobe.Services
             return document.GeneratePdf();
         }
 
-        // Helper za generiranje barkoda (ZXing)
+        // Helper za generiranje barkoda
         private byte[] GenerateBarcodeBytes(string barcodeData)
         {
             var barcodeWriter = new BarcodeWriterPixelData
@@ -250,16 +253,17 @@ namespace SkladisteRobe.Services
                 Options = new EncodingOptions
                 {
                     Height = 80,
-                    Width = 300
+                    Width = 300,
+                    Margin = 10
                 }
             };
 
             var pixelData = barcodeWriter.Write(barcodeData);
 
-            using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, System.Drawing.Imaging.PixelFormat.Format32bppRgb))
+            using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb))
             using (var ms = new MemoryStream())
             {
-                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, pixelData.Width, pixelData.Height), ImageLockMode.WriteOnly, System.Drawing.Imaging.PixelFormat.Format32bppRgb);
+                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, pixelData.Width, pixelData.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
                 try
                 {
                     System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);

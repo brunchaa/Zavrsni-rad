@@ -110,21 +110,18 @@ namespace SkladisteRobe.Controllers
             if (materijal == null)
                 return NotFound("Materijal ne postoji");
 
-            // Generiraj barkod tekst
-            var barcodeText = $"MID:{materijalId:D6}";  // Npr. MID:000001
+            var barcodeText = $"Materijal ID:{materijalId}";  // Ispravljeno: "MaterijalId:1" bez zeros
             materijal.QRCodeData = barcodeText;  // Spremi u bazu
             _context.SaveChanges();
 
-            // Generiraj Code 128 barkod
             var barcodeWriter = new BarcodeWriterPixelData
             {
                 Format = BarcodeFormat.CODE_128,
                 Options = new EncodingOptions
                 {
-                    Height = 120,
-                    Width = 400,
-                    Margin = 20,
-                    PureBarcode = false
+                    Height = 80,
+                    Width = 300,
+                    Margin = 10
                 }
             };
 
@@ -133,10 +130,7 @@ namespace SkladisteRobe.Controllers
             using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb))
             using (var ms = new MemoryStream())
             {
-                var bitmapData = bitmap.LockBits(
-                    new Rectangle(0, 0, pixelData.Width, pixelData.Height),
-                    ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
-
+                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, pixelData.Width, pixelData.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
                 try
                 {
                     System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
@@ -145,11 +139,10 @@ namespace SkladisteRobe.Controllers
                 {
                     bitmap.UnlockBits(bitmapData);
                 }
-
                 bitmap.Save(ms, ImageFormat.Png);
                 return File(ms.ToArray(), "image/png", $"barkod_{materijalId}.png");
             }
         }
-    
+
     }
 }

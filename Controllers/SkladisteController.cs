@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
-    [Authorize(Roles = "Zaposlenik,Voditelj,Admin")]  // Samo Voditelj i Admin mogu pristupiti
+    [Authorize(Roles = "Zaposlenik,Voditelj,Admin")]  
     public class SkladisteController : Controller
     {
         private readonly AppDbContext _context;

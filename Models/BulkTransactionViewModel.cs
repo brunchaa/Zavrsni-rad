@@ -3,8 +3,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SkladisteRobe.Models
 {
+
+    
     public class BulkTransactionItemViewModel
     {
+
+         public int MaterijalId { get; set; }
         [Required(ErrorMessage = "Naziv je obavezan")]
         [RegularExpression(@"^(?=.*\p{L}).+$", ErrorMessage = "Naziv mora sadržavati barem jedno slovo.")]
         public string Naziv { get; set; }

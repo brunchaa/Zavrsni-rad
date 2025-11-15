@@ -34,5 +34,14 @@ namespace SkladisteRobe.Controllers
             }
             return RedirectToAction("Index");
         }
+        public async Task<IActionResult> Transakcije()
+        {
+            var transakcije = await _context.Transakcije
+                .Include(t => t.Korisnik)
+                .Include(t => t.Materijal)
+                .OrderByDescending(t => t.Datum)
+                .ToListAsync();
+            return View(transakcije);
+        }
     }
 }

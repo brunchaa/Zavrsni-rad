@@ -5,7 +5,8 @@ namespace SkladisteRobe.Models
     public enum MjernaJedinica
     {
         KOMAD,
-        METAR
+        METAR,
+        M2
     }
 
     public class Materijal

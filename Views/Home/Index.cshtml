@@ -1,11 +1,44 @@
 ﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    ViewData["Title"] = "Home";
+    ViewData["Title"] = "Početna stranica";
 }
 
-<div class="container text-center mt-4">
-    <h1 class="display-4">Dobrodošli u SkladišteRobe</h1>
-    <p class="lead">Moderno rješenje za upravljanje skladištem</p>
-    <img src="~/images/warehouse.jpg" alt="Warehouse" class="img-fluid rounded shadow" style="max-width: 100%; height: auto;" />
-</div>
+@if (!User.Identity.IsAuthenticated)
+{
+    <div class="container my-5 text-center">
+        <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
+            <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
+                <h2 class="mb-0">Dobrodošli u Skladište Robe</h2>
+            </div>
+            <div class="card-body p-4">
+                <p class="lead">Molimo prijavite se ili registrirajte da nastavite.</p>
+                <a asp-controller="Account" asp-action="Login" class="btn btn-warning me-3" style="background-color: #ff6600; border-color: #ff6600;"><i class="fas fa-sign-in-alt"></i> Prijava</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-secondary"><i class="fas fa-user-plus"></i> Registracija</a>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container my-5">
+        <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
+            <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
+                <h2 class="mb-0">Dobrodošli, @User.Identity.Name</h2>
+            </div>
+            <div class="card-body p-4">
+                <h3>Vijesti iz firme</h3>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="fas fa-news me-2 text-primary"></i> Nova isporuka robe stigla u skladište – provjerite inventar!
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="fas fa-news me-2 text-primary"></i> Obuka za barkod skenere sljedeći tjedan.
+                    </li>
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="fas fa-news me-2 text-primary"></i> Godišnji inventar – pripremite se!
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+}
