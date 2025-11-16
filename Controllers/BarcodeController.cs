@@ -16,7 +16,6 @@ namespace SkladisteRobe.Controllers
     public class BarcodeController : Controller
     {
         private readonly AppDbContext _context;
-
         public BarcodeController(AppDbContext context)
         {
             _context = context;
@@ -37,9 +36,7 @@ namespace SkladisteRobe.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(tip) || (tip != "ulaz" && tip != "izlaz"))
-                    return Json(new { success = false, message = "Neispravan tip operacije" });
-
+                // Uklonjen odabir tipa jer se ne koristi - samo dohvati materijal
                 var parts = barcodeData.Split(':');
                 if (parts.Length != 2 || parts[0] != "MaterijalId")
                     return Json(new { success = false, message = "Neispravan barkod" });
@@ -51,42 +48,8 @@ namespace SkladisteRobe.Controllers
                 if (materijal == null)
                     return Json(new { success = false, message = "Materijal ne postoji" });
 
-                if (tip == "izlaz" && materijal.Kolicina < 1)
-                    return Json(new { success = false, message = "Nedovoljna količina na stanju" });
-
-                var korisnikIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (!int.TryParse(korisnikIdClaim, out int korisnikId) || korisnikId <= 0)
-                    return Json(new { success = false, message = "Ne može se identificirati korisnik" });
-
-                var korisnik = await _context.Korisnici.FindAsync(korisnikId);
-                if (korisnik == null)
-                    return Json(new { success = false, message = "Korisnik ne postoji" });
-
-                var transakcija = new Transakcija
-                {
-                    MaterijalId = materijalId,
-                    Materijal = materijal,
-                    Kolicina = 1,
-                    Datum = DateTime.Now,
-                    Tip = tip,
-                    KorisnikId = korisnikId,
-                    Korisnik = korisnik
-                };
-
-                _context.Transakcije.Add(transakcija);
-
-                if (tip == "ulaz")
-                {
-                    materijal.Kolicina += 1;
-                }
-                else if (tip == "izlaz")
-                {
-                    materijal.Kolicina -= 1;
-                }
-
-                await _context.SaveChangesAsync();
-
-                return Json(new { success = true, data = barcodeData, transakcijaId = transakcija.Id, novaKolicina = materijal.Kolicina });
+                // NE mijenjaj bazu - samo vrati podatke za dodavanje u formu
+                return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString() });
             }
             catch (Exception ex)
             {
@@ -100,21 +63,20 @@ namespace SkladisteRobe.Controllers
             if (materijal == null)
                 return NotFound("Materijal ne postoji");
 
-            var barcodeText = $"MaterijalId:{materijalId}";  // Standardni format bez nula
+            var barcodeText = $"MaterijalId:{materijalId}";
             materijal.QRCodeData = barcodeText;
             _context.SaveChanges();
 
             var barcodeWriter = new BarcodeWriterPixelData
             {
-                Format = BarcodeFormat.CODE_128,
+                Format = BarcodeFormat.QR_CODE,
                 Options = new EncodingOptions
                 {
-                    Height = 80,
-                    Width = 300,
+                    Height = 200,
+                    Width = 200,
                     Margin = 10
                 }
             };
-
             var pixelData = barcodeWriter.Write(barcodeText);
 
             using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb))
@@ -130,7 +92,7 @@ namespace SkladisteRobe.Controllers
                     bitmap.UnlockBits(bitmapData);
                 }
                 bitmap.Save(ms, ImageFormat.Png);
-                return File(ms.ToArray(), "image/png", $"barkod_{materijalId}.png");
+                return File(ms.ToArray(), "image/png", $"qr_{materijalId}.png");
             }
         }
     }

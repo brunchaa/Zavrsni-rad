@@ -1,10 +1,10 @@
-﻿@{
+﻿@model SkladisteRobe.Models.BulkTransactionViewModel
+@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Radni nalog";
 }
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-
 <div class="container my-5">
     <div class="card shadow-lg border-0 rounded-3">
         <div class="card-header bg-primary text-white rounded-top p-4">
@@ -13,7 +13,7 @@
         <div class="card-body p-4">
             @Html.ValidationSummary(true, "", new { @class = "text-danger alert alert-danger mb-4" })
             <form asp-controller="Skladiste" asp-action="RadniNalog" method="post" id="bulkForm">
-                @Html.AntiForgeryToken()  <!--  AJAX -->
+                @Html.AntiForgeryToken()
                 <div id="itemsContainer">
                     <div class="bulk-item mb-4 p-3 border rounded bg-light" data-index="0">
                         <div class="row g-3">
@@ -35,7 +35,7 @@
                                 </select>
                             </div>
                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-danger w-100 removeItemBtn" style="display: none;"><i class="fas fa-trash"></i> Ukloni</button>
+                                <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
                             </div>
                         </div>
                     </div>
@@ -43,18 +43,9 @@
                 <div class="d-flex justify-content-start mb-4">
                     <button type="button" id="addItemBtn" class="btn btn-secondary me-2"><i class="fas fa-plus"></i> Dodaj stavku ručno</button>
                     <button type="button" id="scanSkenerBtn" class="btn btn-info me-2"><i class="fas fa-barcode"></i> Skeniraj skenerom</button>
-                    <button type="button" id="scanCameraBtn" class="btn btn-info"><i class="fas fa-camera"></i> Skeniraj kamerom</button>
                 </div>
-                <div id="skenerSection" style="display: none; margin-bottom: 20px;">
-                    <h4>Skeniraj fizičkim skenerom</h4>
-                    <input type="text" id="barcodeInput" class="form-control" placeholder="Skeniraj ovdje..." autofocus />
-                    <div id="resultScanner" class="mt-2"></div>
-                </div>
-                <div id="cameraSection" style="display: none; margin-bottom: 20px;">
-                    <h4>Skeniraj kamerom</h4>
-                    <video id="videoElementId" width="400" height="300" autoplay></video>
-                    <div id="resultCamera" class="mt-2"></div>
-                </div>
+                <!-- Skriveni input za sken -->
+                <input type="text" id="hiddenBarcodeInput" style="position: absolute; left: -9999px;" />
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <button type="button" id="submitPrimka" class="btn btn-success me-md-2"><i class="fas fa-arrow-down"></i> Primka</button>
                     <button type="button" id="submitIzdaj" class="btn btn-warning"><i class="fas fa-arrow-up"></i> Izdaj robu</button>
@@ -63,11 +54,24 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script src="https://unpkg.com/@@zxing/library@@latest"></script>
+
     <script>
         let itemIndex = 1;
+        let isScanActive = false;
+        let scanTimeout = null;
+        let currentScan = '';
+        // Funkcija za update remove buttona: Sakrij ako samo jedan item
+        function updateRemoveButtons() {
+            const items = document.querySelectorAll('.bulk-item');
+            const removeBtns = document.querySelectorAll('.removeItemBtn');
+            if (items.length <= 1) {
+                removeBtns.forEach(btn => btn.style.display = 'none');
+            } else {
+                removeBtns.forEach(btn => btn.style.display = 'block');
+            }
+        }
         // Dodaj stavku ručno
         document.getElementById('addItemBtn').addEventListener('click', function () {
             const container = document.getElementById('itemsContainer');
@@ -98,109 +102,131 @@
                     </div>
                 </div>
             `;
-            div.querySelector('.removeItemBtn').addEventListener('click', function () {
-                container.removeChild(div);
-            });
             container.appendChild(div);
             itemIndex++;
+            updateRemoveButtons();
         });
-
-        // Funkcija za dodavanje stavke iz skena
-        function addScannedItem(barcodeData) {
+        // Dodaj/popuni stavku iz skena: Prvo popuni prazan ako postoji, inače dodaj novi
+        function addScannedItem(scannedData) {
             const container = document.getElementById('itemsContainer');
-            const div = document.createElement('div');
-            div.classList.add('bulk-item', 'mb-4', 'p-3', 'border', 'rounded', 'bg-light');
-            div.setAttribute('data-index', itemIndex);
-            div.innerHTML = `
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Naziv materijala</label>
-                        <input type="text" name="Items[${itemIndex}].Naziv" value="${barcodeData}" class="form-control naziv-autocomplete" required />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Količina</label>
-                        <input type="number" name="Items[${itemIndex}].Kolicina" value="1" class="form-control" required min="1" />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Mjerna jedinica</label>
-                        <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
-                            <option value="">Odaberi...</option>
-                            <option value="KOMAD">KOMAD</option>
-                            <option value="METAR">METAR</option>
-                            <option value="m2">m2</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
-                    </div>
-                </div>
-            `;
-            div.querySelector('.removeItemBtn').addEventListener('click', function () {
-                container.removeChild(div);
+            const items = container.querySelectorAll('.bulk-item');
+            let filled = false;
+            // Traži prvi prazan item (naziv empty)
+            items.forEach(item => {
+                if (filled) return;
+                const nazivInput = item.querySelector('input[name$=".Naziv"]');
+                if (nazivInput && nazivInput.value.trim() === '') {
+                    nazivInput.value = scannedData.naziv;
+                    const kolicinaInput = item.querySelector('input[name$=".Kolicina"]');
+                    if (kolicinaInput) kolicinaInput.value = 1;
+                    const jedinicaSelect = item.querySelector('select[name$=".Jedinica"]');
+                    if (jedinicaSelect && scannedData.jedinica) {
+                        jedinicaSelect.value = scannedData.jedinica;
+                    }
+                    filled = true;
+                }
             });
-            container.appendChild(div);
-            itemIndex++;
+            // Ako nije popunio nijedan, dodaj novi
+            if (!filled) {
+                const div = document.createElement('div');
+                div.classList.add('bulk-item', 'mb-4', 'p-3', 'border', 'rounded', 'bg-light');
+                div.setAttribute('data-index', itemIndex);
+                div.innerHTML = `
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Naziv materijala</label>
+                            <input type="text" name="Items[${itemIndex}].Naziv" value="${scannedData.naziv}" class="form-control naziv-autocomplete" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Količina</label>
+                            <input type="number" name="Items[${itemIndex}].Kolicina" value="1" class="form-control" required min="1" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Mjerna jedinica</label>
+                            <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
+                                <option value="">Odaberi...</option>
+                                <option value="KOMAD">KOMAD</option>
+                                <option value="METAR">METAR</option>
+                                <option value="m2">m2</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
+                        </div>
+                    </div>
+                `;
+                const jedinicaSelect = div.querySelector('select[name$=".Jedinica"]');
+                if (scannedData.jedinica) {
+                    jedinicaSelect.value = scannedData.jedinica;
+                }
+                container.appendChild(div);
+                itemIndex++;
+            }
+            updateRemoveButtons();
         }
-
-        // Funkcija za obradu skena i slanje na server
+        // Obrada skena
         function processScan(barcodeData) {
-            var tip = document.querySelector('[name="submitType"]').value == 'Primka' ? 'ulaz' : 'izlaz';
-            fetch('/Barcode/ProcessScan', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ barcodeData: barcodeData, tip: tip })
-            }).then(response => response.json())
-              .then(data => {
-                  if (data.success) {
-                      alert('Transakcija dodana! ID: ' + data.transakcijaId);
-                      addScannedItem(barcodeData);
-                  } else {
-                      alert('Greška: ' + data.message);
-                  }
-              }).catch(error => {
-                  alert('Greška: ' + error);
-              });
-        }
-
-        // Skeniraj skenerom - pokaži sekciju i fokusiraj input
-        document.getElementById('scanSkenerBtn').addEventListener('click', function () {
-            document.getElementById('skenerSection').style.display = 'block';
-            document.getElementById('barcodeInput').focus();
-            document.getElementById('cameraSection').style.display = 'none';
-        });
-
-        // Skeniraj kamerom - pokaži sekciju i startaj kameru
-        document.getElementById('scanCameraBtn').addEventListener('click', function () {
-            document.getElementById('cameraSection').style.display = 'block';
-            document.getElementById('skenerSection').style.display = 'none';
-            startCameraScan();
-        });
-
-        // Start camera scan
-        function startCameraScan() {
-            codeReader = new ZXing.BrowserMultiFormatReader();
-            codeReader.decodeFromVideoDevice(null, 'videoElementId', (result, err) => {
-                if (result) {
-                    document.getElementById('resultCamera').innerText = 'Skenirano: ' + result.text;
-                    processScan(result.text);
+            barcodeData = barcodeData.replace(/\s/g, ''); // Ukloni sve space i novi red
+            console.log('Očišćeni podatak: "' + barcodeData + '"'); // Debug
+            // Koristi regex da izvučeš brojeve nakon 'MaterijalId:'
+            const matches = barcodeData.match(/MaterijalId:(\d+)/g) || [];
+            const barkodovi = matches.map(match => match.replace('MaterijalId:', ''));
+            console.log('Izvučeni ID-ovi: ', barkodovi); // Debug
+            if (barkodovi.length === 0) {
+                console.warn('Nema valjanih ID-ova u skenu.');
+                return;
+            }
+            barkodovi.forEach(idStr => {
+                const id = parseInt(idStr);
+                if (isNaN(id)) {
+                    console.warn('Preskačem nevaljani ID: ' + idStr);
+                    alert('Upozorenje: Nevaljani ID pronađen (dobiven: ' + idStr + '). Preskačem.');
+                    return;
                 }
-                if (err && !(err instanceof ZXing.NotFoundException)) {
-                    console.error(err);
-                }
+                console.log('Dohvaćam materijal za ID: ' + id); // Debug
+                $.get('/Skladiste/GetMaterijal?id=' + id, function (data) {
+                    if (data.success) {
+                        addScannedItem({ naziv: data.naziv, jedinica: data.jedinica });
+                    } else {
+                        alert('Greška: Materijal nije pronađen za ID: ' + id);
+                    }
+                }).fail(function () {
+                    alert('Greška u dohvaćanju materijala za ID: ' + id);
+                });
             });
         }
-
-        // Obrada inputa od skenera
-        document.getElementById('barcodeInput').addEventListener('input', (event) => {
-            let input = event.target.value.trim();
-            if (input) {
-                document.getElementById('resultScanner').innerText = 'Skenirano: ' + input;
-                processScan(input);
-                event.target.value = ''; // Reset za sljedeći sken
+        // Toggle skeniranja
+        document.getElementById('scanSkenerBtn').addEventListener('click', function () {
+            isScanActive = !isScanActive;
+            const btn = this;
+            if (isScanActive) {
+                btn.classList.remove('btn-info');
+                btn.classList.add('btn-danger');
+                btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniranje aktivno (klikni za stop)';
+                document.getElementById('hiddenBarcodeInput').focus();
+            } else {
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-info');
+                btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniraj skenerom';
+                document.activeElement.blur();
             }
         });
-
-        //  AUTOCOMPLETE
+        // Input event za skener sa debounce timeoutom
+        document.getElementById('hiddenBarcodeInput').addEventListener('input', (event) => {
+            if (!isScanActive) return;
+            currentScan = event.target.value;
+            console.log('Trenutni input: ' + currentScan); // Debug za praćenje
+            if (scanTimeout) clearTimeout(scanTimeout);
+            scanTimeout = setTimeout(() => {
+                if (currentScan) {
+                    console.log('Processing scan after pause: ' + currentScan); // Debug
+                    processScan(currentScan);
+                    event.target.value = '';
+                    currentScan = '';
+                }
+            }, 100); // Čekaj 100ms pauze da smatraš sken završenim
+        });
+        // AUTOCOMPLETE
         $(document).on('focus', '.naziv-autocomplete', function () {
             $(this).autocomplete({
                 source: function (request, response) {
@@ -224,21 +250,17 @@
                 }
             });
         });
-
         // AJAX submit za Primka i Izdaj robu
         $('#submitPrimka').click(function () {
             submitForm('Primka');
         });
-
         $('#submitIzdaj').click(function () {
             submitForm('Izdaj robu');
         });
-
         function submitForm(submitType) {
             var form = $('#bulkForm');
             var formData = new FormData(form[0]);
             formData.append('submitType', submitType);
-
             $.ajax({
                 url: form.attr('action'),
                 type: 'POST',
@@ -261,8 +283,6 @@
                     a.click();
                     a.remove();
                     window.URL.revokeObjectURL(url);
-
-                    // Refresh stranice
                     location.reload();
                 },
                 error: function (xhr, status, error) {
@@ -270,8 +290,22 @@
                 }
             });
         }
+        // Inicijalno update i event delegation za remove button-e
+        document.addEventListener('DOMContentLoaded', function () {
+            updateRemoveButtons();
+            // Event delegation za sve remove button-e (hvata i prvi i dinamičke)
+            document.getElementById('itemsContainer').addEventListener('click', function (event) {
+                if (event.target.closest('.removeItemBtn')) {
+                    const btn = event.target.closest('.removeItemBtn');
+                    const item = btn.closest('.bulk-item');
+                    if (item) {
+                        item.remove();
+                        updateRemoveButtons();
+                    }
+                }
+            });
+        });
     </script>
-
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
