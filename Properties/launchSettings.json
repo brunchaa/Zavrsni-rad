@@ -3,12 +3,12 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:50816",
-      "sslPort": 44388
+      "applicationUrl": "http://localhost:5137",
+      "sslPort": 7203
     }
   },
   "profiles": {
-    "pROJEKT_ZA_PIN": {
+    "SkladisteRobe": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

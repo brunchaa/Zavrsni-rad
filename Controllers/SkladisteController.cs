@@ -50,6 +50,7 @@ namespace SkladisteRobe.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var user = await _context.Korisnici.FindAsync(userId);
             var fullName = user != null ? $"{user.Ime} {user.Prezime}" : "Nepoznato";
+            var batchId = Guid.NewGuid(); // Jedinstveni ID za bulk grupu
             foreach (var item in model.Items)
             {
                 var existing = await _context.Materijali
@@ -81,7 +82,8 @@ namespace SkladisteRobe.Controllers
                         Kolicina = item.Kolicina,
                         Datum = DateTime.Now,
                         Tip = "Primka",
-                        KorisnikId = userId
+                        KorisnikId = userId,
+                        BatchId = batchId // Dodaj BatchId za grupiranje
                     });
                 }
                 else if (submitType == "Izdaj robu")
@@ -99,7 +101,8 @@ namespace SkladisteRobe.Controllers
                         Kolicina = item.Kolicina,
                         Datum = DateTime.Now,
                         Tip = "Izdaj robu",
-                        KorisnikId = userId
+                        KorisnikId = userId,
+                        BatchId = batchId // Dodaj BatchId za grupiranje
                     });
                 }
             }
@@ -123,7 +126,20 @@ namespace SkladisteRobe.Controllers
                 .Include(t => t.Materijal)
                 .OrderByDescending(t => t.Datum)
                 .ToListAsync();
-            return View(transakcije);
+            // Grupiraj po BatchId ako postoji, ili po Datum (za stare transakcije bez BatchId)
+            var groupedTransakcije = transakcije
+                .GroupBy(t => t.BatchId ?? Guid.NewGuid()) // Ako null, koristi unique Guid za grupu po Datum
+                .Select(g => new GroupedTransakcija
+                {
+                    BatchId = g.Key,
+                    Datum = g.First().Datum,
+                    Tip = g.First().Tip,
+                    Korisnik = g.First().Korisnik,
+                    Stavke = g.ToList()
+                })
+                .OrderByDescending(g => g.Datum)
+                .ToList();
+            return View(groupedTransakcije);
         }
         public IActionResult GenerateTransakcijePdf()
         {
@@ -176,6 +192,30 @@ namespace SkladisteRobe.Controllers
             if (materijal == null)
                 return Json(new { success = false });
             return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString(), id = materijal.Id, kolicina = materijal.Kolicina });
+        }
+        // GeneratePdfForBatch za grupu
+        public IActionResult GeneratePdfForBatch(Guid batchId)
+        {
+            var transakcije = _context.Transakcije
+                .Include(t => t.Korisnik)
+                .Include(t => t.Materijal)
+                .Where(t => t.BatchId == batchId)
+                .ToList();
+            if (transakcije.Count == 0)
+                return NotFound();
+            var model = new BulkTransactionViewModel
+            {
+                Items = transakcije.Select(t => new BulkTransactionItemViewModel
+                {
+                    Naziv = t.Materijal?.Naziv ?? "N/A",
+                    Kolicina = t.Kolicina,
+                    Jedinica = t.Materijal?.Jedinica ?? MjernaJedinica.KOMAD  // Koristi default ako null
+                }).ToList()
+            };
+            var tip = transakcije.First().Tip;
+            var fullName = transakcije.First().Korisnik?.Ime + " " + transakcije.First().Korisnik?.Prezime ?? "Nepoznato";
+            var pdfBytes = _pdfService.GenerateBulkTransactionPdf(model, tip, fullName);
+            return File(pdfBytes, "application/pdf", $"Batch_{batchId}.pdf");
         }
     }
 }

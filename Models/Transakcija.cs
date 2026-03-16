@@ -21,6 +21,8 @@ namespace SkladisteRobe.Models
         [Required]
         public string Tip { get; set; }
 
+        public Guid? BatchId { get; set; }
+
         [Required]
         public int KorisnikId { get; set; }
 

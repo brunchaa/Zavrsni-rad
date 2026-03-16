@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Transakcija>
+﻿@model IEnumerable<GroupedTransakcija>
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -14,50 +14,46 @@
     }
     else
     {
-        <table class="table table-striped" id="transakcijeTable">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Materijal ID</th>
-                    <th>Količina</th>
-                    <th>Tip</th>
-                    <th>Datum</th>
-                    <th>Vrijeme</th>
-                    <th>Kreirao</th>
-                    <th>Akcije</th>
-                    <th data-visible="false">ISO Datum (za sort)</th> <!-- Skrivena kolona za sortiranje -->
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var transakcija in Model)
-                {
-                    <tr>
-                        <td>@transakcija.Id</td>
-                        <td>@transakcija.MaterijalId</td>
-                        <td>@transakcija.Kolicina</td>
-                        <td>@transakcija.Tip</td>
-                        <td>@transakcija.Datum.ToString("dd.MM.yyyy")</td>
-                        <td>@transakcija.Datum.ToString("HH:mm:ss")</td>
-                        <td>@(transakcija.Korisnik != null ? $"{transakcija.Korisnik.Ime} {transakcija.Korisnik.Prezime}" : "Nepoznato")</td>
-                        <td>
-                            <a class="btn btn-primary btn-sm" href="@Url.Action("GeneratePdf", "Skladiste", new { id = transakcija.Id })">Preuzmi PDF</a>
-                        </td>
-                        <td>@transakcija.Datum.ToString("yyyy-MM-dd")</td> <!-- Skrivena kolona sa ISO formatom za sortiranje -->
-                    </tr>
-                }
-            </tbody>
-        </table>
+        @foreach (var group in Model)
+        {
+            <div class="card mb-3">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>@group.Tip - @group.Datum.ToString("dd.MM.yyyy HH:mm") - Kreirao: @(group.Korisnik?.Ime) @(group.Korisnik?.Prezime)</h5>
+                    <a class="btn btn-primary btn-sm" href="@Url.Action("GeneratePdfForBatch", new { batchId = group.BatchId })">Preuzmi PDF</a>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Materijal</th>
+                                <th>Količina</th>
+                                <th>Jedinica</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stavka in group.Stavke)
+                            {
+                                <tr>
+                                    <td>@(stavka.Materijal?.Naziv ?? "N/A")</td>
+                                    <td>@stavka.Kolicina</td>
+                                    <td>@(stavka.Materijal?.Jedinica.ToString() ?? "N/A")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
     }
 </div>
-
 @section Scripts {
     <script>
         $('#transakcijeTable').DataTable({
             language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
             pageLength: 25,
-            order: [[8, 'desc']],  // Sortiraj po 9. koloni (ISO Datum, index 8) descending (najnoviji prvo)
+            order: [[8, 'desc']],
             columnDefs: [
-                { targets: 8, visible: false }  // Sakrij 9. kolonu (index 8)
+                { targets: 8, visible: false }  
             ]
         });
     </script>

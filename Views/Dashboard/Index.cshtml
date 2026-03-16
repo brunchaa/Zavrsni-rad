@@ -34,31 +34,6 @@
         </div>
     </div>
 
-    <!-- nedavne transakcije -->
-    <h4>Nedavne transakcije</h4>
-    <table class="table table-striped" id="recentTransakcijeTable">
-        <thead>
-            <tr>
-                <th>Datum</th>
-                <th>Tip</th>
-                <th>Materijal</th>
-                <th>Količina</th>
-                <th>Korisnik</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var t in Model.RecentTransakcije)
-            {
-                <tr>
-                    <td>@t.Datum.ToString("dd.MM.yyyy HH:mm")</td>
-                    <td>@t.Tip</td>
-                    <td>@(t.Materijal?.Naziv ?? "N/A")</td>
-                    <td>@t.Kolicina</td>
-                    <td>@(t.Korisnik?.Username ?? "Nepoznato")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
 
     <!-- top materijali -->
     <h4>Top 5 najčešće korištenih materijala</h4>
