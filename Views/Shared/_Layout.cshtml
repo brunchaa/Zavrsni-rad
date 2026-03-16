@@ -31,34 +31,25 @@
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Home</a></li>
                         @if (User.Identity.IsAuthenticated)
-
                         {
-                                <li class="nav-item"><a class="nav-link" asp-controller="Skladiste" asp-action="Index">Skladište</a></li>
-                                <li class="nav-item"><a class="nav-link" asp-controller="Skladiste" asp-action="RadniNalog">Radni nalog</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Skladiste" asp-action="Index">Skladište</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Skladiste" asp-action="RadniNalog">Radni nalog</a></li>
                             @if (User.IsInRole("Voditelj") || User.IsInRole("Admin"))
-
                             {
-                                        <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" asp-controller="Admin" asp-action="Transakcije">Transakcije</a>
-                                        </li>
+                                <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Skladiste" asp-action="Transakcije">Transakcije</a> <!-- Promijenjeno na Skladiste/Transakcije, uklonjen duplikat -->
+                                </li>
                             }
                             @if (User.IsInRole("Admin"))
-
                             {
-                                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">Admin</a></li>
-                                        <li class="nav-item">
-                                            <a class="nav-link" asp-controller="Admin" asp-action="Transakcije">Transakcije</a>
-                                        </li>
+                                <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Index">ADMIN</a></li>
                             }
-                                <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Logout">Odjava</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Logout">Odjava</a></li>
                         }
-
                         else
-
                         {
-                                <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Register">Registracija</a></li>
-                                <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Prijava</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Prijava</a></li> <!-- Uklonio Register, jer je sad samo za admina -->
                         }
                     </ul>
                 </div>

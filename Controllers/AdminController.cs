@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace SkladisteRobe.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
@@ -16,14 +17,12 @@ namespace SkladisteRobe.Controllers
             _context = context;
         }
 
-        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Index()
         {
             var korisnici = await _context.Korisnici.ToListAsync();
             return View(korisnici);
         }
 
-        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> ChangeRole(int userId, string role)
         {
@@ -36,15 +35,38 @@ namespace SkladisteRobe.Controllers
             return RedirectToAction("Index");
         }
 
-        [Authorize(Roles = "Voditelj,Admin")]
-        public async Task<IActionResult> Transakcije()
+        public IActionResult Create()
         {
-            var transakcije = await _context.Transakcije
-                .Include(t => t.Korisnik)
-                .Include(t => t.Materijal)
-                .OrderByDescending(t => t.Datum)
-                .ToListAsync();
-            return View(transakcije);
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(RegisterViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                if (await _context.Korisnici.AnyAsync(k => k.Username == model.Username))
+                {
+                    ModelState.AddModelError("Username", "Korisničko ime već postoji.");
+                    return View(model);
+                }
+
+                var korisnik = new Korisnik
+                {
+                    Username = model.Username,
+                    Password = model.Password,
+                    Ime = model.Ime,
+                    Prezime = model.Prezime,
+                    Role = Uloga.Zaposlenik
+                };
+
+                _context.Korisnici.Add(korisnik);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction("Index");
+            }
+            return View(model);
         }
     }
 }

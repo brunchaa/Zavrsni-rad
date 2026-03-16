@@ -1,6 +1,6 @@
 ﻿@{
-Layout = "~/Views/Shared/_Layout.cshtml";
-ViewData["Title"] = "Početna stranica";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Početna stranica";
 }
 
 @if (!User.Identity.IsAuthenticated)
@@ -8,56 +8,117 @@ ViewData["Title"] = "Početna stranica";
     <div class="container my-5 text-center">
         <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
             <img src="~/images/istockphoto-1720037556-612x612.jpg" class="card-img-top rounded-top" alt="Ilustracija skladišta" style="height: 300px; object-fit: contain;">
-            <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
-                <h2 class="mb-0">Dobrodošli u Skladište Robe</h2>
-            </div>
-            <div class="card-body p-4">
-                <p class="lead">Molimo prijavite se ili registrirajte da nastavite.</p>
-                <a asp-controller="Account" asp-action="Login" class="btn btn-warning me-3" style="background-color: #ff6600; border-color: #ff6600;"><i class="fas fa-sign-in-alt"></i> Prijava</a>
-                <a asp-controller="Account" asp-action="Register" class="btn btn-secondary"><i class="fas fa-user-plus"></i> Registracija</a>
-            </div>
-        </div>
-    </div>
-}
-else
-{
-    <div class="container my-5">
-        <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
-            <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
-                <h2 class="mb-0">Dobrodošli, @User.Identity.Name</h2>
-            </div>
-            <div class="card-body p-4">
-                <h3>Vijesti iz firme</h3>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <img src="~/images/6299053.png" class="card-img-top" alt="Liječnički pregled" style="height: 200px; object-fit: contain;">
-                            <div class="card-body">
-                                <h5 class="card-title">Ovaj tjedan obavezni liječnički pregledi</h5>
-                                <p class="card-text">Svi zaposlenici moraju obaviti godišnji pregled. Prijavite se kod HR-a do petka.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <img src="~/images/3.jpg" class="card-img-top" alt="Obuka za barkod skenere" style="height: 200px; object-fit: contain;">
-                            <div class="card-body">
-                                <h5 class="card-title">Obuka za barkod skenere sljedeći tjedan</h5>
-                                <p class="card-text">Prijavite se za obuku kako biste poboljšali efikasnost u skladištu.</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="card h-100">
-                            <img src="~/images/4.jfif" class="card-img-top" alt="Godišnji inventar" style="height: 200px; object-fit: contain;">
-                            <div class="card-body">
-                                <h5 class="card-title">Godišnji inventar – pripremite se!</h5>
-                                <p class="card-text">Pripreme za godišnji pregled inventara počinju uskoro. Više detalja na sastanku.</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
+                    <h2 class="mb-0">Dobrodošli u Skladište Robe</h2>
+                </div>
+                <div class="card-body p-4">
+                    <p class="lead">Molimo prijavite se ili registrirajte da nastavite.</p>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-warning me-3" style="background-color: #ff6600; border-color: #ff6600;"><i class="fas fa-sign-in-alt"></i> Prijava</a>
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-secondary"><i class="fas fa-user-plus"></i> Registracija</a>
                 </div>
             </div>
         </div>
-    </div>
-}
+    }
+else
+    {
+        <div class="container my-5">
+            <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
+                <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
+                    <h2 class="mb-0">Dobrodošli, @User.Identity.Name</h2>
+                </div>
+                <div class="card-body p-4">
+                    <h3>Vijesti iz firme</h3>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card h-100">
+                                <img src="~/images/6299053.png" class="card-img-top" alt="Liječnički pregled" style="height: 200px; object-fit: contain;">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Ovaj tjedan obavezni liječnički pregledi</h5>
+                                        <p class="card-text">Svi zaposlenici moraju obaviti godišnji pregled. Prijavite se kod HR-a do petka.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <img src="~/images/3.jpg" class="card-img-top" alt="Obuka za barkod skenere" style="height: 200px; object-fit: contain;">
+                                        <div class="card-body">
+                                            <h5 class="card-title">Obuka za barkod skenere sljedeći tjedan</h5>
+                                            <p class="card-text">Prijavite se za obuku kako biste poboljšali efikasnost u skladištu.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <div class="card h-100">
+                                        <img src="~/images/4.jfif" class="card-img-top" alt="Godišnji inventar" style="height: 200px; object-fit: contain;">
+                                            <div class="card-body">
+                                                <h5 class="card-title">Godišnji inventar – pripremite se!</h5>
+                                                <p class="card-text">Pripreme za godišnji pregled inventara počinju uskoro. Više detalja na sastanku.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Poboljšana sekcija za kalendar -->
+                                <h3 class="mt-5">Kalendar sa blagdanima za 2026. godinu</h3>
+                                <div id="calendar" class="shadow p-3 mb-5 bg-white rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @section Scripts {
+                    <!-- Dodaj FullCalendar CDN -->
+                    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
+                    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+                        var calendarEl = document.getElementById('calendar');
+                        var calendar = new FullCalendar.Calendar(calendarEl, {
+                        initialView: 'dayGridMonth',
+                        initialDate: '2026-03-16', // Trenutni datum
+                        locale: 'hr', // Hrvatski jezik
+                        themeSystem: 'bootstrap', // Koristi Bootstrap theme za ljepši izgled (pretpostavlja se da Bootstrap postoji)
+                        headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: '' // Maknuto desno dugmad
+                        },
+                        events: [
+                        { title: 'Nova godina', start: '2026-01-01', allDay: true, color: 'red' },
+                        { title: 'Sveta tri kralja', start: '2026-01-06', allDay: true, color: 'red' },
+                        { title: 'Uskrs', start: '2026-04-05', allDay: true, color: 'red' },
+                        { title: 'Uskrsni ponedjeljak', start: '2026-04-06', allDay: true, color: 'red' },
+                        { title: 'Praznik rada', start: '2026-05-01', allDay: true, color: 'red' },
+                        { title: 'Dan državnosti', start: '2026-05-30', allDay: true, color: 'red' },
+                        { title: 'Tijelovo', start: '2026-06-04', allDay: true, color: 'red' },
+                        { title: 'Dan antifašističke borbe', start: '2026-06-22', allDay: true, color: 'red' },
+                        { title: 'Dan pobjede i domovinske zahvalnosti', start: '2026-08-05', allDay: true, color: 'red' },
+                        { title: 'Velika Gospa', start: '2026-08-15', allDay: true, color: 'red' },
+                        { title: 'Dan svih svetih', start: '2026-11-01', allDay: true, color: 'red' },
+                        { title: 'Božić', start: '2026-12-25', allDay: true, color: 'red' },
+                        { title: 'Sveti Stjepan', start: '2026-12-26', allDay: true, color: 'red' }
+                        ],
+                        editable: false,
+                        height: 'auto',
+                        dateClick: function(info) {
+                        var title = prompt('Unesite naslov događaja ili komentar za ' + info.dateStr + ':');
+                        if (title) {
+                        calendar.addEvent({
+                        title: title,
+                        start: info.dateStr,
+                        allDay: true,
+                        color: 'blue' // Boja za korisničke događaje
+                        });
+                        }
+                        },
+                        eventClick: function(info) {
+                        if (confirm('Želite li izbrisati ovaj događaj?')) {
+                        info.event.remove();
+                        }
+                        }
+                        });
+                        calendar.render();
+                        });
+                    </script>
+                }

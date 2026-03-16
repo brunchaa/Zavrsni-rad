@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies; // Dodano za custom authentication
+﻿using Microsoft.AspNetCore.Authentication.Cookies; 
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Infrastructure;
 using Serilog;
 using SkladisteRobe.Data;
 using SkladisteRobe.Middleware;
 using SkladisteRobe.Models;
-using SkladisteRobe.Services; //  PdfService
+using SkladisteRobe.Services; 
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,7 +60,7 @@ using (var scope = app.Services.CreateScope())
         adminUser = new Korisnik
         {
             Username = "admin",
-            Password = "admin123", // Plain text
+            Password = "admin123", 
             Ime = "Admin",
             Prezime = "Admin",
             Role = Uloga.Admin

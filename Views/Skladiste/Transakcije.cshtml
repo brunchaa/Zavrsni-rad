@@ -1,60 +1,64 @@
-﻿@model IEnumerable<SkladisteRobe.Models.Transakcija>
+﻿@model IEnumerable<Transakcija>
+
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    ViewData["Title"] = "Prošle Transakcije";
+    ViewData["Title"] = "Transakcije";
 }
 
 <div class="container">
     <h2 class="mb-4">Prošle Transakcije</h2>
 
     @if (!Model.Any())
-
     {
-            <p class="alert alert-info">Nema dostupnih transakcija.</p>
+        <p class="alert alert-info">Nema dostupnih transakcija.</p>
     }
-
     else
-
     {
-            <table class="table table-striped" id="transakcijeTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Materijal ID</th>
-                        <th>Količina</th>
-                        <th>Tip</th>
-                        <th>Datum</th>
-                        <th>Vrijeme</th>
-                        <th>Kreirao</th>
-                        <th>Akcije</th>
-                    </tr>
-                </thead>
-                <tbody>
+        <table class="table table-striped" id="transakcijeTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Materijal ID</th>
+                    <th>Količina</th>
+                    <th>Tip</th>
+                    <th>Datum</th>
+                    <th>Vrijeme</th>
+                    <th>Kreirao</th>
+                    <th>Akcije</th>
+                    <th data-visible="false">ISO Datum (za sort)</th> <!-- Skrivena kolona za sortiranje -->
+                </tr>
+            </thead>
+            <tbody>
                 @foreach (var transakcija in Model)
                 {
-                            <tr>
-                                <td>@transakcija.Id</td>
-                                <td>@transakcija.MaterijalId</td>
-                                <td>@transakcija.Kolicina</td>
-                                <td>@transakcija.Tip</td>
-                                <td>@transakcija.Datum.ToString("dd.MM.yyyy")</td>
-                                <td>@transakcija.Datum.ToString("HH:mm:ss")</td>
-                                <td>@(transakcija.Korisnik != null ? $"{transakcija.Korisnik.Ime} {transakcija.Korisnik.Prezime}" : "Nepoznato")</td>
-                                <td>
-                                    <a class="btn btn-primary btn-sm" href="@Url.Action("GeneratePdf", "Skladiste", new { id = transakcija.Id })">Preuzmi PDF</a>
-                                </td>
-                            </tr>
+                    <tr>
+                        <td>@transakcija.Id</td>
+                        <td>@transakcija.MaterijalId</td>
+                        <td>@transakcija.Kolicina</td>
+                        <td>@transakcija.Tip</td>
+                        <td>@transakcija.Datum.ToString("dd.MM.yyyy")</td>
+                        <td>@transakcija.Datum.ToString("HH:mm:ss")</td>
+                        <td>@(transakcija.Korisnik != null ? $"{transakcija.Korisnik.Ime} {transakcija.Korisnik.Prezime}" : "Nepoznato")</td>
+                        <td>
+                            <a class="btn btn-primary btn-sm" href="@Url.Action("GeneratePdf", "Skladiste", new { id = transakcija.Id })">Preuzmi PDF</a>
+                        </td>
+                        <td>@transakcija.Datum.ToString("yyyy-MM-dd")</td> <!-- Skrivena kolona sa ISO formatom za sortiranje -->
+                    </tr>
                 }
-                </tbody>
-            </table>
+            </tbody>
+        </table>
     }
 </div>
 
 @section Scripts {
-        <script>
-            $('#transakcijeTable').DataTable({
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
-            });
-        </script>
+    <script>
+        $('#transakcijeTable').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
+            pageLength: 25,
+            order: [[8, 'desc']],  // Sortiraj po 9. koloni (ISO Datum, index 8) descending (najnoviji prvo)
+            columnDefs: [
+                { targets: 8, visible: false }  // Sakrij 9. kolonu (index 8)
+            ]
+        });
+    </script>
 }

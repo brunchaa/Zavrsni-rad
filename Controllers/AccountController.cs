@@ -18,34 +18,6 @@ namespace SkladisteRobe.Controllers
             _context = context;
         }
 
-        public IActionResult Register()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var korisnik = new Korisnik
-                {
-                    Username = model.Username,
-                    Password = model.Password, // Plain text za testiranje
-                    Ime = model.Ime,
-                    Prezime = model.Prezime,
-                    Role = Uloga.Zaposlenik // Default uloga
-                };
-                _context.Korisnici.Add(korisnik);
-                await _context.SaveChangesAsync();
-                // Automatski login nakon registracije
-                await SignInKorisnik(korisnik);
-                return RedirectToAction("Index", "Home");
-            }
-            return View(model);
-        }
-
         public IActionResult Login()
         {
             return View();
@@ -89,6 +61,16 @@ namespace SkladisteRobe.Controllers
             return RedirectToAction("Login");
         }
 
+        public async Task<IActionResult> Transakcije()
+        {
+            var transakcije = await _context.Transakcije
+                .Include(t => t.Korisnik)
+                .Include(t => t.Materijal)
+                .OrderByDescending(t => t.Datum)
+                .ToListAsync();
+            return View(transakcije);
+        }
+
         // Helper metoda za custom sign in sa claims za role
         private async Task SignInKorisnik(Korisnik korisnik)
         {
@@ -101,6 +83,24 @@ namespace SkladisteRobe.Controllers
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        }
+
+        // Ako netko pokuša pristupiti Register, redirect na error
+        public IActionResult Register()
+        {
+            return RedirectToAction("AccessDenied"); // Ili custom error view
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterViewModel model)
+        {
+            return RedirectToAction("AccessDenied");
+        }
+
+        // Dodaj AccessDenied ako treba
+        public IActionResult AccessDenied()
+        {
+            return View(); // Kreiraj Views/Shared/AccessDenied.cshtml sa porukom "Pristup zabranjen"
         }
     }
 }

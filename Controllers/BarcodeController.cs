@@ -20,53 +20,44 @@ namespace SkladisteRobe.Controllers
         {
             _context = context;
         }
-
         public IActionResult Scan(string tip)
         {
-            if (string.IsNullOrEmpty(tip) || (tip != "ulaz" && tip != "izlaz"))
+            if (string.IsNullOrEmpty(tip) || (tip != "ulaz" && tip != "izlaz" && tip != "pretraga"))
             {
                 return BadRequest("Neispravan tip operacije.");
             }
             ViewBag.Tip = tip;
             return View();
         }
-
         [HttpPost]
         public async Task<IActionResult> ProcessScan(string barcodeData, string tip)
         {
             try
             {
-                // Uklonjen odabir tipa jer se ne koristi - samo dohvati materijal
                 var parts = barcodeData.Split(':');
                 if (parts.Length != 2 || parts[0] != "MaterijalId")
                     return Json(new { success = false, message = "Neispravan barkod" });
-
                 if (!int.TryParse(parts[1], out int materijalId))
                     return Json(new { success = false, message = "Neispravan ID materijala" });
-
                 var materijal = await _context.Materijali.FindAsync(materijalId);
                 if (materijal == null)
                     return Json(new { success = false, message = "Materijal ne postoji" });
-
-                // NE mijenjaj bazu - samo vrati podatke za dodavanje u formu
-                return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString() });
+                // Vrati podatke uključujući ID i količinu za prikaz stanja
+                return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString(), id = materijal.Id, kolicina = materijal.Kolicina });
             }
             catch (Exception ex)
             {
                 return Json(new { success = false, message = ex.Message });
             }
         }
-
         public IActionResult GenerateBarcode(int materijalId)
         {
             var materijal = _context.Materijali.Find(materijalId);
             if (materijal == null)
                 return NotFound("Materijal ne postoji");
-
             var barcodeText = $"MaterijalId:{materijalId}";
             materijal.QRCodeData = barcodeText;
             _context.SaveChanges();
-
             var barcodeWriter = new BarcodeWriterPixelData
             {
                 Format = BarcodeFormat.QR_CODE,
@@ -78,7 +69,6 @@ namespace SkladisteRobe.Controllers
                 }
             };
             var pixelData = barcodeWriter.Write(barcodeText);
-
             using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb))
             using (var ms = new MemoryStream())
             {

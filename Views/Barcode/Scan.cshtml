@@ -1,29 +1,47 @@
 ﻿@{
     ViewData["Title"] = "Skeniraj Barkod";
-    int radniNalogId = ViewBag.RadniNalogId;
 }
 
-<h1>Skeniraj Barkod za Radni Nalog @radniNalogId</h1>
+<h1>Skeniraj Barkod za @ViewBag.Tip</h1>
 
-<!--  Skeniranje kamerom -->
+<!-- Skeniranje kamerom -->
 <div>
     <h3>Skeniraj kamerom</h3>
     <video id="videoElementId" width="400" height="300" autoplay></video>
     <div id="resultCamera"></div>
 </div>
 
-<!--  Skeniranje fizičkim barkod skenerom -->
+<!-- Skeniranje fizičkim barkod skenerom -->
 <div style="margin-top: 20px;">
     <h3>Skeniraj fizičkim skenerom</h3>
     <input type="text" id="barcodeInput" placeholder="Skeniraj ovdje..." autofocus />
     <div id="resultScanner"></div>
 </div>
 
+<!-- Tablica za prikaz skeniranih artikala (za višestruko skeniranje u modu 'pretraga') -->
+@if (ViewBag.Tip == "pretraga")
+{
+    <div style="margin-top: 20px;">
+        <h3>Skenirani artikli i njihovo stanje</h3>
+        <table id="scannedItems" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Naziv</th>
+                    <th>Količina</th>
+                    <th>Jedinica</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <a href="@Url.Action("Index", "Skladiste")" class="btn btn-secondary">Nazad na skladište</a>
+    </div>
+}
+
 @section Scripts {
     <script src="https://unpkg.com/@@zxing/library@@latest"></script>
     <script>
         // Funkcija za slanje na server
-        function sendToProcessScan(barcodeData, tip) {
+        function sendToProcessScan(barcodeData) {
             fetch('/Barcode/ProcessScan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -31,8 +49,14 @@
             }).then(response => response.json())
               .then(data => {
                   if (data.success) {
-                      alert('Transakcija dodana! ID: ' + data.transakcijaId);
-                      //  Reset input ili reload
+                      if ('@ViewBag.Tip' === 'pretraga') {
+                          // Dodaj u tablicu za višestruko skeniranje
+                          let row = `<tr><td>${data.naziv}</td><td>${data.kolicina}</td><td>${data.jedinica}</td></tr>`;
+                          document.querySelector('#scannedItems tbody').innerHTML += row;
+                      } else {
+                          // Za ulaz/izlaz: prikaži alert sa podacima (kao prije)
+                          alert('Artikl pronađen! Naziv: ' + data.naziv + ', Stanje: ' + data.kolicina + ' ' + data.jedinica);
+                      }
                   } else {
                       alert('Greška: ' + data.message);
                   }
@@ -41,25 +65,25 @@
               });
         }
 
-        // Skeniranje kamerom
+        // Skeniranje kamerom - NE resetuj da omogući višestruko skeniranje
         const codeReader = new ZXing.BrowserMultiFormatReader();
         codeReader.decodeFromVideoDevice(null, 'videoElementId', (result, err) => {
             if (result) {
                 document.getElementById('resultCamera').innerText = 'Skenirano kamerom: ' + result.text;
-                sendToProcessScan(result.text, '@ViewBag.Tip');
-                codeReader.reset(); // Stop kamera nakon skena
+                sendToProcessScan(result.text);
+                // NE zovi codeReader.reset() - nastavlja skenirati za višestruko
             }
             if (err && !(err instanceof ZXing.NotFoundException)) {
                 console.error(err);
             }
         });
 
-        // Skeniranje fizičkim skenerom
+        // Skeniranje fizičkim skenerom - nastavlja slušati nakon svakog inputa
         document.getElementById('barcodeInput').addEventListener('input', (event) => {
             let input = event.target.value.trim();
             if (input) {
                 document.getElementById('resultScanner').innerText = 'Skenirano skenerom: ' + input;
-                sendToProcessScan(input, '@ViewBag.Tip');
+                sendToProcessScan(input);
                 event.target.value = ''; // Reset input za sljedeći sken
             }
         });
