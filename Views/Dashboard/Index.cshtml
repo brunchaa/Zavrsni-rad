@@ -1,80 +1,198 @@
-﻿@model SkladisteRobe.Models.DashboardViewModel
+﻿@model DashboardViewModel
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Dashboard";
 }
 
-<div class="container">
-    <h2 class="mb-4">Dashboard - Analitike</h2>
+<div class="container my-5">
+    <h1 class="mb-4">Dashboard za Voditelja</h1>
 
-    <div class="row">
+    <!-- niske stock -->
+    @if (Model.LowStockMaterials.Any())
+    {
+        <div class="alert alert-warning" role="alert">
+            <h4>Niski stock alerti</h4>
+            <ul>
+                @foreach (var mat in Model.LowStockMaterials)
+                {
+                    <li>@mat.Naziv: Samo @mat.Kolicina @mat.Jedinica.ToString() ostalo!</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <!-- grafovi -->
+    <div class="row mb-4">
         <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">Materijali po Kategoriji</div>
-                <div class="card-body">
-                    <canvas id="materijalChart" height="200"></canvas>
-                </div>
-            </div>
+            <h4>Materijali po kategoriji</h4>
+            <canvas id="materijalChart" height="200"></canvas>
         </div>
         <div class="col-md-6">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">Transakcije po Tipu</div>
-                <div class="card-body">
-                    <canvas id="transakcijeChart" height="200"></canvas>
-                </div>
-            </div>
+            <h4>Transakcije po danima (zadnjih 7 dana)</h4>
+            <canvas id="transakcijeChart" height="200"></canvas>
         </div>
     </div>
 
-    <div class="card shadow">
-        <div class="card-header bg-primary text-white">Korisničke Statistike (Login Vrijeme)</div>
+    <!-- nedavne transakcije -->
+    <h4>Nedavne transakcije</h4>
+    <table class="table table-striped" id="recentTransakcijeTable">
+        <thead>
+            <tr>
+                <th>Datum</th>
+                <th>Tip</th>
+                <th>Materijal</th>
+                <th>Količina</th>
+                <th>Korisnik</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in Model.RecentTransakcije)
+            {
+                <tr>
+                    <td>@t.Datum.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@t.Tip</td>
+                    <td>@(t.Materijal?.Naziv ?? "N/A")</td>
+                    <td>@t.Kolicina</td>
+                    <td>@(t.Korisnik?.Username ?? "Nepoznato")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- top materijali -->
+    <h4>Top 5 najčešće korištenih materijala</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Materijal</th>
+                <th>Broj transakcija</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var top in Model.TopMaterials)
+            {
+                <tr>
+                    <td>@top.Naziv</td>
+                    <td>@top.BrojTransakcija</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- top korisnici po transakcijama -->
+    <h4>Top 5 korisnika po broju transakcija</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Korisnik</th>
+                <th>Broj transakcija</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tu in Model.TopUsersByTransakcije)
+            {
+                <tr>
+                    <td>@tu.UserName</td>
+                    <td>@tu.BrojTransakcija</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Korisničke statistike dnevne -->
+    <h4>Dnevne korisničke statistike</h4>
+    <table class="table table-striped" id="userStatsTable">
+        <thead>
+            <tr>
+                <th>Korisnik</th>
+                <th>Zadnji login</th>
+                <th>Logirano danas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Model.UserStats)
+            {
+                <tr>
+                    <td>@u.UserName</td>
+                    <td>@(u.LastLoginTime?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")</td>
+                    <td>@u.DailyLoginDuration.ToString(@"hh\:mm\:ss")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Prosječan broj transakcija po danu -->
+    <div class="card text-center mt-4">
         <div class="card-body">
-            <table class="table table-striped" id="userStatsTable">
-                <thead>
-                    <tr>
-                        <th>Korisnik</th>
-                        <th>Zadnji Login</th>
-                        <th>Ukupno Vrijeme</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model.UserStats)
-                    {
-                            <tr>
-                                <td>@user.UserName</td>
-                                <td>@(user.LastLoginTime?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")</td>
-                                <td>@user.TotalLoginDuration.ToString(@"hh\:mm\:ss")</td>
-                            </tr>
-                    }
-                </tbody>
-            </table>
+            <h5>Prosječan broj transakcija zadnjih 7 dana</h5>
+            <p class="display-4">@Model.AverageDailyTransactions.ToString("N2")</p>
         </div>
     </div>
 </div>
 
 @section Scripts {
-        <script>
-            var materijalCtx = document.getElementById('materijalChart').getContext('2d');
-            new Chart(materijalCtx, {
+    <script>
+        console.log('Chart.js učitan:', typeof Chart !== 'undefined');  // Debug
+
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js nije učitan - provjeri _Layout.cshtml ili mrežu.');
+        } else {
+            // Chart za materijale po kategoriji
+            var labelsMaterijal = @Html.Raw(Json.Serialize(Model.MaterijalPoKategoriji.Select(k => k.Kategorija)));
+            var dataMaterijal = @Html.Raw(Json.Serialize(Model.MaterijalPoKategoriji.Select(k => k.Kolicina)));
+            console.log('Podaci za materijalChart:', labelsMaterijal, dataMaterijal);  // Debug
+
+            var ctxMaterijal = document.getElementById('materijalChart').getContext('2d');
+            var materijalChart = new Chart(ctxMaterijal, {
                 type: 'bar',
                 data: {
-                    labels: [@Html.Raw(string.Join(",", Model.MaterijalPoKategoriji.Select(r => "'" + r.Kategorija + "'")))],
-                    datasets: [{ label: 'Količina', data: [@Html.Raw(string.Join(",", Model.MaterijalPoKategoriji.Select(r => r.Kolicina)))], backgroundColor: 'rgba(0, 123, 255, 0.5)' }]
+                    labels: labelsMaterijal,
+                    datasets: [{
+                        label: 'Količina',
+                        data: dataMaterijal,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } }
                 }
             });
 
-            var transakcijeCtx = document.getElementById('transakcijeChart').getContext('2d');
-            new Chart(transakcijeCtx, {
-                type: 'pie',
+            // Chart za transakcije po danima
+            var labelsTransakcije = @Html.Raw(Json.Serialize(Model.TransakcijePoDanima.Select(d => d.Datum.ToString("dd.MM."))));
+            var dataTransakcije = @Html.Raw(Json.Serialize(Model.TransakcijePoDanima.Select(d => d.Broj)));
+            console.log('Podaci za transakcijeChart:', labelsTransakcije, dataTransakcije);  // Debug
+
+            var ctxTransakcije = document.getElementById('transakcijeChart').getContext('2d');
+            var transakcijeChart = new Chart(ctxTransakcije, {
+                type: 'line',
                 data: {
-                    labels: [@Html.Raw(string.Join(",", Model.TransakcijeStats.Select(t => "'" + t.Tip + "'")))],
-                    datasets: [{ data: [@Html.Raw(string.Join(",", Model.TransakcijeStats.Select(t => t.Broj)))], backgroundColor: ['#007bff', '#dc3545'] }]
+                    labels: labelsTransakcije,
+                    datasets: [{
+                        label: 'Broj transakcija',
+                        data: dataTransakcije,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } }
                 }
             });
+        }
 
-            $('#userStatsTable').DataTable({
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' }
-            });
-        </script>
+        // Datatables za tablice
+        $('#recentTransakcijeTable').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
+            paging: false,
+            searching: false,
+            info: false
+        });
+
+        $('#userStatsTable').DataTable({
+            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
+            pageLength: 10
+        });
+    </script>
 }
