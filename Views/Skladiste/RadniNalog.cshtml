@@ -251,44 +251,82 @@
             });
         });
         // AJAX submit za Primka i Izdaj robu
+        $(document).ready(function () {
+        console.log('✅ Skripta se učitala i čeka klikove');
+
+        // Provjera da li dugmad i forma postoje
+        console.log('tipka Primka:', $('#submitPrimka').length ? 'NAĐENO ✅' : 'NIJE NAĐENO ❌');
+        console.log('tipka Izdaj robu:', $('#submitIzdaj').length ? 'NAĐENO ✅' : 'NIJE NAĐENO ❌');
+        console.log('Forma #bulkForm:', $('#bulkForm').length ? 'NAĐENO ✅' : 'NIJE NAĐENO ❌');
+
         $('#submitPrimka').click(function () {
-            submitForm('Primka');
+        console.log('🔥 Kliknuto na PRIMKA tipka');
+        submitForm('Primka');
         });
+
         $('#submitIzdaj').click(function () {
-            submitForm('Izdaj robu');
+        console.log('🔥 Kliknuto na IZDAJ ROBU tipka');
+        submitForm('Izdaj robu');
         });
+        });
+
         function submitForm(submitType) {
-            var form = $('#bulkForm');
-            var formData = new FormData(form[0]);
-            formData.append('submitType', submitType);
-            $.ajax({
-                url: form.attr('action'),
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                xhr: function () {
-                    var xhr = new XMLHttpRequest();
-                    xhr.responseType = 'blob';
-                    return xhr;
-                },
-                success: function (blob, status, xhr) {
-                    var contentDisposition = xhr.getResponseHeader('Content-Disposition');
-                    var fileName = contentDisposition.split('filename=')[1].replace(/"/g, '');
-                    var url = window.URL.createObjectURL(blob);
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = fileName;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(url);
-                    location.reload();
-                },
-                error: function (xhr, status, error) {
-                    alert('Greška: ' + error);
-                }
-            });
+        console.log('🚀 submitForm pozvan sa tipom:', submitType);
+
+        var form = $('#bulkForm');
+        if (form.length === 0) {
+        console.error('❌ Forma #bulkForm nije pronađena!');
+        alert('Greška: Forma #bulkForm nije pronađena!');
+        return;
+        }
+
+        var formData = new FormData(form[0]);
+        formData.append('submitType', submitType);
+        console.log('📦 FormData spremljen, submitType =', submitType);
+
+        $.ajax({
+        url: form.attr('action'),
+        type: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        xhr: function () {
+        console.log('📡 Kreiram XMLHttpRequest sa responseType=blob');
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        return xhr;
+        },
+        success: function (blob, status, xhr) {
+        console.log('✅ AJAX success! Status:', status);
+        var contentDisposition = xhr.getResponseHeader('Content-Disposition');
+        console.log('📄 Content-Disposition:', contentDisposition);
+
+        if (!contentDisposition) {
+        console.error('❌ Server nije vratio Content-Disposition!');
+        alert('Greška: Server nije vratio datoteku.');
+        return;
+        }
+
+        var fileName = contentDisposition.split('filename=')[1]?.replace(/"/g, '') || 'dokument.pdf';
+        console.log('📥 Download fajl:', fileName);
+
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+
+        console.log('✅ Download pokrenut, reload za 800ms...');
+        setTimeout(() => location.reload(), 800);
+        },
+        error: function (xhr, status, error) {
+        console.error('❌ AJAX error!', { status, error, response: xhr.responseText });
+        alert('Greška: ' + (xhr.responseText || error));
+        }
+        });
         }
         // Inicijalno update i event delegation za remove button-e
         document.addEventListener('DOMContentLoaded', function () {
