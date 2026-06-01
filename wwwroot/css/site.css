@@ -15,17 +15,16 @@ body {
 
     .navbar .nav-link,
     .navbar .navbar-brand {
-        color: #000 !important;
-        transition: background-color 0.3s, color 0.3s;
+        color: #FFFFFF !important;
+        transition: color 0.3s;
     }
 
-   
         .navbar .nav-link:hover,
         .navbar .navbar-brand:hover {
-            background-color: #17203A;
-            color: #DCD8BC !important;
-            padding: 5px 10px;
+            background-color: rgba(0,0,0,0.1);
+            color: #000000 !important;
             border-radius: 4px;
+        }
         }
 
 
@@ -40,20 +39,22 @@ body {
 
 
 .fixed-footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background-color: ##BCA976;
-    color: #000;
-    text-align: center;
-    padding: 10px 0;
-    border-top: 1px solid #ccc;
+    position: fixed !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    background-color: #17203A !important;
+    color: #DCD8BC !important;
+    text-align: center !important;
+    padding: 15px 0 !important;
+    border-top: 1px solid #BCA976 !important;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.3) !important;
+    z-index: 9999 !important;
 }
 
 
 .btn-custom {
-    background-color: ##BCA976;
+    background-color: #BCA976;
     color: #17203A;
     border: 1px solid #17203A;
     transition: background-color 0.3s, color 0.3s;

@@ -9,13 +9,13 @@ namespace SkladisteRobe.Models
         public List<TransakcijaStat> TransakcijeStats { get; set; } = new List<TransakcijaStat>();
         public List<UserStat> UserStats { get; set; } = new List<UserStat>();
 
-        // Novi propertyji
-        public List<Materijal> LowStockMaterials { get; set; } = new List<Materijal>();  // Niski stockovi
-        public List<Transakcija> RecentTransakcije { get; set; } = new List<Transakcija>();  // Recentne transakcije
-        public List<TransakcijaPoDanu> TransakcijePoDanima { get; set; } = new List<TransakcijaPoDanu>();  // Za graf
-        public List<TopMaterijal> TopMaterials { get; set; } = new List<TopMaterijal>();  // Top materijali
-        public List<TopUser> TopUsersByTransakcije { get; set; } = new List<TopUser>();  // Top korisnici po transakcijama
-        public double AverageDailyTransactions { get; set; }  // Prosječan broj transakcija po danu
+        
+        public List<Materijal> LowStockMaterials { get; set; } = new List<Materijal>();  
+        public List<Transakcija> RecentTransakcije { get; set; } = new List<Transakcija>();  
+        public List<TransakcijaPoDanu> TransakcijePoDanima { get; set; } = new List<TransakcijaPoDanu>();  
+        public List<TopMaterijal> TopMaterials { get; set; } = new List<TopMaterijal>();  
+        public List<TopUser> TopUsersByTransakcije { get; set; } = new List<TopUser>();  
+        public double AverageDailyTransactions { get; set; }  
 
         public class MaterijalKategorija
         {
@@ -34,7 +34,7 @@ namespace SkladisteRobe.Models
             public string UserName { get; set; }
             public DateTime? LastLoginTime { get; set; }
             public TimeSpan TotalLoginDuration { get; set; }
-            public TimeSpan DailyLoginDuration { get; set; }  // Novo: Dnevno logiranje
+            public TimeSpan DailyLoginDuration { get; set; }  
         }
 
         public class TransakcijaPoDanu

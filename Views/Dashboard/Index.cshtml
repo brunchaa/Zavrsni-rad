@@ -8,7 +8,7 @@
 <div class="container my-5">
     <h1 class="mb-4">Dashboard za Voditelja</h1>
 
-    <!-- niske stock -->
+    
     @if (Model.LowStockMaterials.Any())
     {
         <div class="alert alert-warning" role="alert">
@@ -22,7 +22,7 @@
         </div>
     }
 
-    <!-- grafovi -->
+    
     <div class="row mb-4">
         <div class="col-md-6">
             <h4>Materijali po kategoriji</h4>
@@ -35,7 +35,7 @@
     </div>
 
 
-    <!-- top materijali -->
+    
     <h4>Top 5 najčešće korištenih materijala</h4>
     <table class="table table-striped">
         <thead>
@@ -55,7 +55,7 @@
         </tbody>
     </table>
 
-    <!-- top korisnici po transakcijama -->
+    
     <h4>Top 5 korisnika po broju transakcija</h4>
     <table class="table table-striped">
         <thead>
@@ -75,7 +75,7 @@
         </tbody>
     </table>
 
-    <!-- Korisničke statistike dnevne -->
+    
     <h4>Dnevne korisničke statistike</h4>
     <table class="table table-striped" id="userStatsTable">
         <thead>
@@ -97,7 +97,7 @@
         </tbody>
     </table>
 
-    <!-- Prosječan broj transakcija po danu -->
+    
     <div class="card text-center mt-4">
         <div class="card-body">
             <h5>Prosječan broj transakcija zadnjih 7 dana</h5>
@@ -108,15 +108,15 @@
 
 @section Scripts {
     <script>
-        console.log('Chart.js učitan:', typeof Chart !== 'undefined');  // Debug
+        console.log('Chart.js učitan:', typeof Chart !== 'undefined');  
 
         if (typeof Chart === 'undefined') {
             console.error('Chart.js nije učitan - provjeri _Layout.cshtml ili mrežu.');
         } else {
-            // Chart za materijale po kategoriji
+            
             var labelsMaterijal = @Html.Raw(Json.Serialize(Model.MaterijalPoKategoriji.Select(k => k.Kategorija)));
             var dataMaterijal = @Html.Raw(Json.Serialize(Model.MaterijalPoKategoriji.Select(k => k.Kolicina)));
-            console.log('Podaci za materijalChart:', labelsMaterijal, dataMaterijal);  // Debug
+            console.log('Podaci za materijalChart:', labelsMaterijal, dataMaterijal);  
 
             var ctxMaterijal = document.getElementById('materijalChart').getContext('2d');
             var materijalChart = new Chart(ctxMaterijal, {
@@ -134,10 +134,10 @@
                 }
             });
 
-            // Chart za transakcije po danima
+            
             var labelsTransakcije = @Html.Raw(Json.Serialize(Model.TransakcijePoDanima.Select(d => d.Datum.ToString("dd.MM."))));
             var dataTransakcije = @Html.Raw(Json.Serialize(Model.TransakcijePoDanima.Select(d => d.Broj)));
-            console.log('Podaci za transakcijeChart:', labelsTransakcije, dataTransakcije);  // Debug
+            console.log('Podaci za transakcijeChart:', labelsTransakcije, dataTransakcije);  
 
             var ctxTransakcije = document.getElementById('transakcijeChart').getContext('2d');
             var transakcijeChart = new Chart(ctxTransakcije, {
@@ -157,7 +157,7 @@
             });
         }
 
-        // Datatables za tablice
+        
         $('#recentTransakcijeTable').DataTable({
             language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
             paging: false,

@@ -251,7 +251,7 @@ namespace SkladisteRobe.Services
             return document.GeneratePdf();
         }
 
-        // Helper za generiranje barkoda
+        
         private byte[] GenerateBarcodeBytes(string barcodeData)
         {
             var barcodeWriter = new BarcodeWriterPixelData

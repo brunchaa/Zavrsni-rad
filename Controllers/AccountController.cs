@@ -1,17 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SkladisteRobe.Data; // Za AppDbContext
-using SkladisteRobe.Models; // Za Korisnik, Uloga
-using System.Security.Claims; // Za custom claims
+using SkladisteRobe.Data; 
+using SkladisteRobe.Models; 
+using System.Security.Claims; 
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication; // Za SignInAsync
-using Microsoft.AspNetCore.Authentication.Cookies; // Za CookieAuthenticationDefaults
+using Microsoft.AspNetCore.Authentication; 
+using Microsoft.AspNetCore.Authentication.Cookies; 
 
 namespace SkladisteRobe.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly AppDbContext _context; // Koristi DbContext za direktan pristup
+        private readonly AppDbContext _context; 
 
         public AccountController(AppDbContext context)
         {
@@ -29,7 +29,7 @@ namespace SkladisteRobe.Controllers
         {
             if (ModelState.IsValid)
             {
-                // Provjera plain text lozinke direktno
+                
                 var korisnik = await _context.Korisnici
                     .FirstOrDefaultAsync(k => k.Username == model.Username && k.Password == model.Password);
                 if (korisnik != null)
@@ -71,7 +71,7 @@ namespace SkladisteRobe.Controllers
             return View(transakcije);
         }
 
-        // Helper metoda za custom sign in sa claims za role
+        
         private async Task SignInKorisnik(Korisnik korisnik)
         {
             var claims = new List<Claim>
@@ -85,10 +85,10 @@ namespace SkladisteRobe.Controllers
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
         }
 
-        // Ako netko pokuša pristupiti Register, redirect na error
+        
         public IActionResult Register()
         {
-            return RedirectToAction("AccessDenied"); // Ili custom error view
+            return RedirectToAction("AccessDenied"); 
         }
 
         [HttpPost]
@@ -97,10 +97,10 @@ namespace SkladisteRobe.Controllers
             return RedirectToAction("AccessDenied");
         }
 
-        // Dodaj AccessDenied ako treba
+        
         public IActionResult AccessDenied()
         {
-            return View(); // Kreiraj Views/Shared/AccessDenied.cshtml sa porukom "Pristup zabranjen"
+            return View(); 
         }
     }
 }

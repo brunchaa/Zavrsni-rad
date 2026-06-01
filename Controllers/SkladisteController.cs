@@ -21,7 +21,7 @@ namespace SkladisteRobe.Controllers
             _context = context;
             _pdfService = pdfService;
         }
-        // Index sa searchString i searchId (za skeniranje)
+        
         public async Task<IActionResult> Index(string searchString, int? searchId)
         {
             var materijali = _context.Materijali.AsQueryable();
@@ -35,12 +35,12 @@ namespace SkladisteRobe.Controllers
             }
             return View(await materijali.ToListAsync());
         }
-        // RadniNalog view
+        
         public IActionResult RadniNalog()
         {
             return View(new BulkTransactionViewModel());
         }
-        // Post RadniNalog
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RadniNalog(BulkTransactionViewModel model, string submitType)
@@ -50,7 +50,7 @@ namespace SkladisteRobe.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
             var user = await _context.Korisnici.FindAsync(userId);
             var fullName = user != null ? $"{user.Ime} {user.Prezime}" : "Nepoznato";
-            var batchId = Guid.NewGuid(); // Jedinstveni ID za bulk grupu
+            var batchId = Guid.NewGuid(); 
             foreach (var item in model.Items)
             {
                 var existing = await _context.Materijali
@@ -60,7 +60,7 @@ namespace SkladisteRobe.Controllers
                     if (existing != null)
                     {
                         existing.Kolicina += item.Kolicina;
-                        item.MaterijalId = existing.Id; // Postavi ID
+                        item.MaterijalId = existing.Id; 
                     }
                     else
                     {
@@ -71,10 +71,10 @@ namespace SkladisteRobe.Controllers
                             Jedinica = item.Jedinica
                         };
                         _context.Materijali.Add(newMat);
-                        await _context.SaveChangesAsync(); // Spremi da dobije ID
-                        item.MaterijalId = newMat.Id; // Postavi ID
-                        newMat.QRCodeData = $"MaterijalId:{newMat.Id}"; // Automatski barkod
-                        await _context.SaveChangesAsync(); // Spremi QRCodeData
+                        await _context.SaveChangesAsync(); 
+                        item.MaterijalId = newMat.Id; 
+                        newMat.QRCodeData = $"MaterijalId:{newMat.Id}"; 
+                        await _context.SaveChangesAsync(); 
                     }
                     _context.Transakcije.Add(new Transakcija
                     {
@@ -83,7 +83,7 @@ namespace SkladisteRobe.Controllers
                         Datum = DateTime.Now,
                         Tip = "Primka",
                         KorisnikId = userId,
-                        BatchId = batchId // Dodaj BatchId za grupiranje
+                        BatchId = batchId 
                     });
                 }
                 else if (submitType == "Izdaj robu")
@@ -94,7 +94,7 @@ namespace SkladisteRobe.Controllers
                         return View(model);
                     }
                     existing.Kolicina -= item.Kolicina;
-                    item.MaterijalId = existing.Id; // Postavi ID
+                    item.MaterijalId = existing.Id; 
                     _context.Transakcije.Add(new Transakcija
                     {
                         MaterijalId = item.MaterijalId,
@@ -102,7 +102,7 @@ namespace SkladisteRobe.Controllers
                         Datum = DateTime.Now,
                         Tip = "Izdaj robu",
                         KorisnikId = userId,
-                        BatchId = batchId // Dodaj BatchId za grupiranje
+                        BatchId = batchId 
                     });
                 }
             }
@@ -110,11 +110,11 @@ namespace SkladisteRobe.Controllers
             var pdfBytes = _pdfService.GenerateBulkTransactionPdf(model, submitType, fullName);
             var currentDate = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
             var fileName = submitType == "Primka" ? $"Primka_{currentDate}.pdf" : $"IzdajRobu_{currentDate}.pdf";
-            // Dodaj pravilno encoded Content-Disposition
+            
             var cd = new System.Net.Mime.ContentDisposition
             {
                 FileName = fileName,
-                Inline = false // Za download
+                Inline = false 
             };
             Response.Headers.Add("Content-Disposition", cd.ToString());
             return File(pdfBytes, "application/pdf");
@@ -126,9 +126,9 @@ namespace SkladisteRobe.Controllers
                 .Include(t => t.Materijal)
                 .OrderByDescending(t => t.Datum)
                 .ToListAsync();
-            // Grupiraj po BatchId ako postoji, ili po Datum (za stare transakcije bez BatchId)
+            
             var groupedTransakcije = transakcije
-                .GroupBy(t => t.BatchId ?? Guid.NewGuid()) // Ako null, koristi unique Guid za grupu po Datum
+                .GroupBy(t => t.BatchId ?? Guid.NewGuid()) 
                 .Select(g => new GroupedTransakcija
                 {
                     BatchId = g.Key,
@@ -167,7 +167,7 @@ namespace SkladisteRobe.Controllers
             var pdfBytes = _pdfService.GenerateAllMaterialsPdf(materijali);
             return File(pdfBytes, "application/pdf", "SviMaterijali.pdf");
         }
-        // SearchMaterijali za autocomplete
+        
         public async Task<IActionResult> SearchMaterijali(string term)
         {
             if (string.IsNullOrEmpty(term))
@@ -185,7 +185,7 @@ namespace SkladisteRobe.Controllers
                 .ToListAsync();
             return Json(materijali);
         }
-        // GetMaterijal za sken
+        
         public async Task<IActionResult> GetMaterijal(int id)
         {
             var materijal = await _context.Materijali.FindAsync(id);
@@ -193,7 +193,7 @@ namespace SkladisteRobe.Controllers
                 return Json(new { success = false });
             return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString(), id = materijal.Id, kolicina = materijal.Kolicina });
         }
-        // GeneratePdfForBatch za grupu
+        
         public IActionResult GeneratePdfForBatch(Guid batchId)
         {
             var transakcije = _context.Transakcije
@@ -209,7 +209,7 @@ namespace SkladisteRobe.Controllers
                 {
                     Naziv = t.Materijal?.Naziv ?? "N/A",
                     Kolicina = t.Kolicina,
-                    Jedinica = t.Materijal?.Jedinica ?? MjernaJedinica.KOMAD  // Koristi default ako null
+                    Jedinica = t.Materijal?.Jedinica ?? MjernaJedinica.KOMAD  
                 }).ToList()
             };
             var tip = transakcije.First().Tip;

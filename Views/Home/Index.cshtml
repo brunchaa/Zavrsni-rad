@@ -9,10 +9,10 @@
         <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
             <img src="~/images/istockphoto-1720037556-612x612.jpg" class="card-img-top rounded-top" alt="Ilustracija skladišta" style="height: 300px; object-fit: contain;">
                 <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
-                    <h2 class="mb-0">Dobrodošli u Skladište Robe</h2>
+                    <h2 class="mb-0">Dobrodošli u Skladište</h2>
                 </div>
                 <div class="card-body p-4">
-                    <p class="lead">Molimo prijavite se ili registrirajte da nastavite.</p>
+                    <p class="lead">Molimo prijavite se da nastavite.</p>
                     <a asp-controller="Account" asp-action="Login" class="btn btn-warning me-3" style="background-color: #ff6600; border-color: #ff6600;"><i class="fas fa-sign-in-alt"></i> Prijava</a>
                 </div>
             </div>
@@ -23,7 +23,7 @@ else
         <div class="container my-5">
             <div class="card shadow-lg border-0 rounded-3" style="background-color: #f8f9fa;">
                 <div class="card-header bg-dark text-white rounded-top p-4" style="background-color: #003366 !important;">
-                    <h2 class="mb-0">Dobrodošli, @User.Identity.Name</h2>
+                    <h2 class="mb-0">Dobrodošao, @User.Identity.Name</h2>
                 </div>
                 <div class="card-body p-4">
                     <h3>Vijesti iz firme</h3>
@@ -57,7 +57,7 @@ else
                                     </div>
                                 </div>
 
-                                <!-- Poboljšana sekcija za kalendar -->
+                                
                                 <h3 class="mt-5">Kalendar sa blagdanima za 2026. godinu</h3>
                                 <div id="calendar" class="shadow p-3 mb-5 bg-white rounded"></div>
                             </div>
@@ -66,7 +66,7 @@ else
                 }
 
                 @section Scripts {
-                    <!-- Dodaj FullCalendar CDN -->
+                    
                     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet" />
                     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
 
@@ -75,13 +75,13 @@ else
                         var calendarEl = document.getElementById('calendar');
                         var calendar = new FullCalendar.Calendar(calendarEl, {
                         initialView: 'dayGridMonth',
-                        initialDate: '2026-03-16', // Trenutni datum
-                        locale: 'hr', // Hrvatski jezik
-                        themeSystem: 'bootstrap', // Koristi Bootstrap theme za ljepši izgled (pretpostavlja se da Bootstrap postoji)
+                        initialDate: '2026-03-16', 
+                        locale: 'hr', 
+                        themeSystem: 'bootstrap', 
                         headerToolbar: {
                         left: 'prev,next today',
                         center: 'title',
-                        right: '' // Maknuto desno dugmad
+                        right: '' 
                         },
                         events: [
                         { title: 'Nova godina', start: '2026-01-01', allDay: true, color: 'red' },
@@ -107,7 +107,7 @@ else
                         title: title,
                         start: info.dateStr,
                         allDay: true,
-                        color: 'blue' // Boja za korisničke događaje
+                        color: 'blue' 
                         });
                         }
                         },

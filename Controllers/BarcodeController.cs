@@ -42,7 +42,6 @@ namespace SkladisteRobe.Controllers
                 var materijal = await _context.Materijali.FindAsync(materijalId);
                 if (materijal == null)
                     return Json(new { success = false, message = "Materijal ne postoji" });
-                // Vrati podatke uključujući ID i količinu za prikaz stanja
                 return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString(), id = materijal.Id, kolicina = materijal.Kolicina });
             }
             catch (Exception ex)

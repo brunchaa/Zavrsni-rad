@@ -9,14 +9,14 @@ using SkladisteRobe.Services;
 QuestPDF.Settings.License = LicenseType.Community;
 var builder = WebApplication.CreateBuilder(args);
 
-// set da okolis koristi FIPS BouncyCastle adapter
+
 Environment.SetEnvironmentVariable("ITEXT_BOUNCY_CASTLE_FACTORY_NAME", "bouncy-castle-fips");
 
 builder.Host.UseSerilog((ctx, lc) => lc.WriteTo.Console().WriteTo.File("logs/app.log", rollingInterval: RollingInterval.Day));
 
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// koristimo custom cookie authentication bez hashiranja
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -24,7 +24,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.AccessDeniedPath = "/Account/AccessDenied"; 
     });
 
-// Registracija PdfService
+
 builder.Services.AddScoped<PdfService>();
 
 builder.Services.AddControllersWithViews();
@@ -47,13 +47,12 @@ app.UseAuthorization();
 
 app.MapControllerRoute(name: "default", pattern: "{controller=Home}/{action=Index}/{id?}");
 
-// Seeding block
+
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    context.Database.Migrate(); // Primijeni migracije
-    // Seeding admina
+    context.Database.Migrate(); 
     var adminUser = await context.Korisnici.FirstOrDefaultAsync(k => k.Username == "admin");
     if (adminUser == null)
     {
