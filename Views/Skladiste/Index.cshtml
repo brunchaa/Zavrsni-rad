@@ -153,8 +153,13 @@
 
             
             $('#materijaliTable').DataTable({
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json' },
-                pageLength: 25 
+                language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json'
+                },
+                pageLength: 25,
+                searching: false,
+                lengthChange: true,
+                dom: '<"datatable-top"l>rt<"datatable-bottom"ip>'
             });
 
             

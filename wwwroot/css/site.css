@@ -19,54 +19,94 @@
 
 body {
     font-family: "Segoe UI", Arial, sans-serif;
-    background-color: var(--page-bg);
+    background-color: floralwhite;
     color: var(--text-main);
     margin: 0;
-    padding-bottom: 75px;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
     min-height: 100vh;
 }
 
 /* Navigacija */
 .navbar {
-    background-color: var(--page-bg);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+    background-color: #17203A !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 9999 !important;
+    width: 100% !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25) !important;
 }
 
     .navbar .navbar-brand {
-        color: #FFFFFF !important;
-        font-weight: 700;
-        letter-spacing: 0.3px;
+        color: #ffffff !important;
+        font-weight: 700 !important;
     }
 
     .navbar .nav-link {
-        color: #FFFFFF !important;
-        border-radius: 6px;
+        color: #ffffff !important;
+        border-radius: 6px !important;
         padding: 8px 12px !important;
-        margin: 0 2px;
-        transition: background-color 0.2s ease, color 0.2s ease;
     }
 
         .navbar .nav-link:hover,
         .navbar .navbar-brand:hover {
-            background-color: #FFFFFF;
-            color: var(--page-bg) !important;
+            background-color: #ffffff !important;
+            color: #17203A !important;
         }
-
-/* Glavni sadržaj */
-.container {
-    background-color: var(--surface);
-    color: var(--text-main);
-    padding: 24px;
+/* Ekran za prijavu */
+.login-card {
+    max-width: 400px;
+    margin: 50px auto;
+    background-color: #17203A;
+    color: #fff;
+    padding: 30px;
     border-radius: 12px;
-    box-shadow: var(--shadow);
-    margin-bottom: 30px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
+    .login-card .login-title,
+    .login-card h2 {
+        color: #fff !important;
+        text-align: center;
+        margin-bottom: 25px;
+        font-size: 24px;
+        display: block;
+    }
+
+    .login-card label {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .login-card .form-control {
+        height: 40px;
+        border-radius: 6px;
+    }
+
+    .login-card .btn-primary {
+        width: 100%;
+        background-color: #DCD8BC;
+        border-color: #DCD8BC;
+        color: #000;
+        font-weight: bold;
+    }
+
+        .login-card .btn-primary:hover {
+            background-color: #cfc8a8;
+            border-color: #cfc8a8;
+            color: #000;
+        }
+
 /* Naslovi i tekst */
+
+
 h1, h2, h3, h4, h5 {
     color: var(--text-main);
     font-weight: 700;
+}
+
+.welcome-title {
+    color: #ffffff !important;
 }
 
 p {
@@ -80,16 +120,21 @@ p {
 /* Footer */
 .fixed-footer {
     position: fixed !important;
-    left: 0 !important;
     bottom: 0 !important;
+    left: 0 !important;
     width: 100% !important;
-    background-color: var(--page-bg) !important;
-    color: #FFFFFF !important;
+    min-height: 50px !important;
+    padding: 14px 0 !important;
+    background-color: rgba(23, 32, 58, 0.85) !important;
+    color: #ffffff !important;
     text-align: center !important;
-    padding: 13px 0 !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
-    z-index: 9999 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(6px) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    z-index: 9998 !important;
 }
+
+
 
 /* Gumbi */
 .btn,
@@ -231,6 +276,54 @@ input[type="submit"] {
         background-color: #EAF2FF;
         color: var(--primary-dark);
     }
+
+.datatable-top {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    margin: 15px 0 !important;
+    clear: both !important;
+}
+
+.dataTables_wrapper .dataTables_length {
+    float: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: var(--text-main) !important;
+}
+
+    .dataTables_wrapper .dataTables_length label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin: 0 !important;
+        color: var(--text-main) !important;
+        font-weight: 600 !important;
+        white-space: nowrap !important;
+    }
+
+    .dataTables_wrapper .dataTables_length select {
+        width: auto !important;
+        min-width: 75px !important;
+        height: 38px !important;
+        margin: 0 6px !important;
+        display: inline-block !important;
+    }
+
+.dataTables_wrapper .dataTables_filter {
+    display: none !important;
+}
+
+.datatable-bottom {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-top: 15px !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+}
 
 /* Forme */
 label {
