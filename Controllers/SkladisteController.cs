@@ -216,9 +216,10 @@ namespace SkladisteRobe.Controllers
             {
                 Items = transakcije.Select(t => new BulkTransactionItemViewModel
                 {
+                    MaterijalId = t.MaterijalId,
                     Naziv = t.Materijal?.Naziv ?? "N/A",
                     Kolicina = t.Kolicina,
-                    Jedinica = t.Materijal?.Jedinica ?? MjernaJedinica.KOMAD  
+                    Jedinica = t.Materijal?.Jedinica ?? MjernaJedinica.KOMAD
                 }).ToList()
             };
             var tip = transakcije.First().Tip;
