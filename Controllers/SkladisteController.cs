@@ -109,8 +109,10 @@ namespace SkladisteRobe.Controllers
             await _context.SaveChangesAsync();
             var pdfBytes = _pdfService.GenerateBulkTransactionPdf(model, submitType, fullName);
             var currentDate = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            var fileName = submitType == "Primka" ? $"Primka_{currentDate}.pdf" : $"IzdajRobu_{currentDate}.pdf";
-            
+            var fileName = submitType == "Primka"
+                ? $"Primka_{currentDate}.pdf"
+                : $"Meduskladisnica_{currentDate}.pdf";
+
             var cd = new System.Net.Mime.ContentDisposition
             {
                 FileName = fileName,

@@ -47,6 +47,7 @@ namespace SkladisteRobe.Models
         {
             public string Naziv { get; set; }
             public int BrojTransakcija { get; set; }
+            public int UkupnaKolicina { get; set; }
         }
 
         public class TopUser

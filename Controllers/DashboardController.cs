@@ -43,14 +43,19 @@ namespace SkladisteRobe.Controllers
                     .OrderByDescending(t => t.Datum).Take(10).ToListAsync(),  
                 TransakcijePoDanima = await _context.Transakcije.Where(t => t.Datum >= sevenDaysAgo)
                     .GroupBy(t => t.Datum.Date)
-                    .Select(g => new DashboardViewModel.TransakcijaPoDanu { Datum = g.Key, Broj = g.Count() }).ToListAsync(),  
-                TopMaterials = await _context.Transakcije.GroupBy(t => t.MaterijalId)
+                    .Select(g => new DashboardViewModel.TransakcijaPoDanu { Datum = g.Key, Broj = g.Count() }).ToListAsync(),
+                TopMaterials = await _context.Transakcije
+                    .Include(t => t.Materijal)
+                    .GroupBy(t => new { t.MaterijalId, t.Materijal.Naziv })
                     .Select(g => new DashboardViewModel.TopMaterijal
                     {
-                        Naziv = _context.Materijali.FirstOrDefault(m => m.Id == g.Key).Naziv ?? "N/A",
-                        BrojTransakcija = g.Count()
+                        Naziv = g.Key.Naziv ?? "N/A",
+                        BrojTransakcija = g.Count(),
+                        UkupnaKolicina = g.Sum(t => t.Kolicina)
                     })
-                    .OrderByDescending(tm => tm.BrojTransakcija).Take(5).ToListAsync(),  
+                    .OrderByDescending(tm => tm.BrojTransakcija)
+                    .Take(5)
+                    .ToListAsync(),
                 TopUsersByTransakcije = await _context.Transakcije.GroupBy(t => t.KorisnikId)
                     .Select(g => new DashboardViewModel.TopUser
                     {
