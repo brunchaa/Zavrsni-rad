@@ -4,11 +4,8 @@ using ZXing;
 using ZXing.Common;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using SkladisteRobe.Data;
-using SkladisteRobe.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+
 
 namespace SkladisteRobe.Controllers
 {
