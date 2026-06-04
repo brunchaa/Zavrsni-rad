@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkladisteRobe.Data;
@@ -11,10 +12,12 @@ namespace SkladisteRobe.Controllers
     public class AdminController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IPasswordHasher<Korisnik> _passwordHasher;
 
-        public AdminController(AppDbContext context)
+        public AdminController(AppDbContext context, IPasswordHasher<Korisnik> passwordHasher)
         {
             _context = context;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<IActionResult> Index()
@@ -24,14 +27,22 @@ namespace SkladisteRobe.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ChangeRole(int userId, string role)
         {
+            if (!Enum.TryParse<Uloga>(role, out var novaUloga))
+            {
+                return BadRequest("Neispravna uloga.");
+            }
+
             var korisnik = await _context.Korisnici.FindAsync(userId);
+
             if (korisnik != null)
             {
-                korisnik.Role = Enum.Parse<Uloga>(role);
+                korisnik.Role = novaUloga;
                 await _context.SaveChangesAsync();
             }
+
             return RedirectToAction("Index");
         }
 
@@ -55,17 +66,19 @@ namespace SkladisteRobe.Controllers
                 var korisnik = new Korisnik
                 {
                     Username = model.Username,
-                    Password = model.Password,
                     Ime = model.Ime,
                     Prezime = model.Prezime,
                     Role = Uloga.Zaposlenik
                 };
+
+                korisnik.PasswordHash = _passwordHasher.HashPassword(korisnik, model.Password);
 
                 _context.Korisnici.Add(korisnik);
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction("Index");
             }
+
             return View(model);
         }
     }

@@ -86,7 +86,7 @@ namespace SkladisteRobe.Controllers
                         BatchId = batchId 
                     });
                 }
-                else if (submitType == "Izdaj robu")
+                else if (submitType == "Međuskladišnica")
                 {
                     if (existing == null || existing.Kolicina < item.Kolicina)
                     {
@@ -100,7 +100,7 @@ namespace SkladisteRobe.Controllers
                         MaterijalId = item.MaterijalId,
                         Kolicina = item.Kolicina,
                         Datum = DateTime.Now,
-                        Tip = "Izdaj robu",
+                        Tip = "Međuskladišnica",
                         KorisnikId = userId,
                         BatchId = batchId 
                     });
@@ -141,6 +141,8 @@ namespace SkladisteRobe.Controllers
                 .ToList();
             return View(groupedTransakcije);
         }
+
+        [Authorize(Roles = "Voditelj,Admin")]
         public IActionResult GenerateTransakcijePdf()
         {
             var transakcije = _context.Transakcije
@@ -150,6 +152,8 @@ namespace SkladisteRobe.Controllers
             var pdfBytes = _pdfService.GenerateTransakcijePdf(transakcije);
             return File(pdfBytes, "application/pdf", "Transakcije.pdf");
         }
+
+        [Authorize(Roles = "Voditelj,Admin")]
         public IActionResult GeneratePdf(int id)
         {
             var transakcija = _context.Transakcije
@@ -161,6 +165,8 @@ namespace SkladisteRobe.Controllers
             var pdfBytes = _pdfService.GeneratePdfReport(transakcija, materijal);
             return File(pdfBytes, "application/pdf", $"Transakcija_{transakcija.Id}.pdf");
         }
+
+        [Authorize(Roles = "Zaposlenik,Voditelj,Admin")]
         public IActionResult GenerateAllPdf()
         {
             var materijali = _context.Materijali.ToList();
@@ -193,7 +199,8 @@ namespace SkladisteRobe.Controllers
                 return Json(new { success = false });
             return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString(), id = materijal.Id, kolicina = materijal.Kolicina });
         }
-        
+
+        [Authorize(Roles = "Voditelj,Admin")]
         public IActionResult GeneratePdfForBatch(Guid batchId)
         {
             var transakcije = _context.Transakcije

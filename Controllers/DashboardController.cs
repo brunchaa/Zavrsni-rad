@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SkladisteRobe.Data;
 using SkladisteRobe.Models;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace SkladisteRobe.Controllers
 {

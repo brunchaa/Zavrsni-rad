@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies; 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using QuestPDF.Infrastructure;
 using Serilog;
 using SkladisteRobe.Data;
@@ -21,9 +22,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/Account/Login";
-        options.AccessDeniedPath = "/Account/AccessDenied"; 
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+        options.SlidingExpiration = true;
     });
 
+builder.Services.AddAuthorization();
+
+builder.Services.AddScoped<IPasswordHasher<Korisnik>, PasswordHasher<Korisnik>>();
 
 builder.Services.AddScoped<PdfService>();
 
@@ -52,21 +58,32 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<AppDbContext>();
-    context.Database.Migrate(); 
+    context.Database.Migrate();
+    var passwordHasher = services.GetRequiredService<IPasswordHasher<Korisnik>>();
+
     var adminUser = await context.Korisnici.FirstOrDefaultAsync(k => k.Username == "admin");
+
     if (adminUser == null)
     {
         adminUser = new Korisnik
         {
             Username = "admin",
-            Password = "admin123", 
             Ime = "Admin",
             Prezime = "Admin",
             Role = Uloga.Admin
         };
+
+        adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "admin123");
+
         context.Korisnici.Add(adminUser);
         await context.SaveChangesAsync();
     }
-}
+    else if (string.IsNullOrEmpty(adminUser.PasswordHash))
+    {
+        adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "admin123");
+        adminUser.Role = Uloga.Admin;
 
-app.Run();
+        await context.SaveChangesAsync();
+    }
+}
+    app.Run();
