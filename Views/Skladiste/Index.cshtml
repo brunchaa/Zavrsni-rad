@@ -4,190 +4,199 @@
     ViewData["Title"] = "Skladište";
 }
 
-    <form method="get" asp-action="Index" class="mb-3">
-        <div class="input-group">
-            <input type="text" name="searchString" placeholder="Pretraži stavke" class="form-control naziv-autocomplete" />
-            <button type="submit" class="btn btn-primary">Pretraži</button>
-        </div>
-    </form>
-
-    <div class="mb-3">
-        <a class="btn btn-primary" href="@Url.Action("RadniNalog", "Skladiste")">Radni nalog</a>
-        <button type="button" id="scanSkenerBtn" class="btn btn-info ms-2"><i class="fas fa-barcode"></i> Skeniraj skenerom za provjeru stanja</button>
+<form method="get" asp-action="Index" class="mb-3">
+    <div class="input-group">
+        <input type="text" name="searchString" placeholder="Pretraži stavke" class="form-control naziv-autocomplete" />
+        <button type="submit" class="btn btn-primary">Pretraži</button>
     </div>
+</form>
 
-    
-    <input type="text" id="hiddenBarcodeInput" style="position: absolute; left: -9999px;" />
+<div class="mb-3">
+    <a class="btn btn-primary" href="@Url.Action("RadniNalog", "Skladiste")">Radni nalog</a>
 
-    
-    <div id="scannedSection" class="mt-4" style="display: none;">
-        <h3>Skenirani artikli i njihovo stanje</h3>
-        <table id="scannedItems" class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Naziv</th>
-                    <th>Količina</th>
-                    <th>Jedinica</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <button id="resetScanned" class="btn btn-secondary">Resetiraj tablicu</button>
-    </div>
+    @if (User.IsInRole("Admin"))
+    {
+        <a asp-controller="Barcode"
+           asp-action="PreuzmiSveBarkodove"
+           class="btn btn-primary ms-2">
+            Preuzmi sve barkodove
+        </a>
+    }
 
-    <table class="table table-striped" id="materijaliTable">
+    <button type="button" id="scanSkenerBtn" class="btn btn-info ms-2"><i class="fas fa-barcode"></i> Skeniraj skenerom za provjeru stanja</button>
+</div>
+
+<input type="text" id="hiddenBarcodeInput" style="position: absolute; left: -9999px;" />
+
+<div id="scannedSection" class="mt-4" style="display: none;">
+    <h3>Skenirani artikli i njihovo stanje</h3>
+    <table id="scannedItems" class="table table-striped">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Naziv</th>
                 <th>Količina</th>
-                <th>Mjerna Jedinica</th>
+                <th>Jedinica</th>
             </tr>
         </thead>
-        <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Naziv</td>
-                    <td>@item.Kolicina</td>
-                    <td>@item.Jedinica</td>
-                </tr>
-            }
-        </tbody>
+        <tbody></tbody>
     </table>
+    <button id="resetScanned" class="btn btn-secondary">Resetiraj tablicu</button>
+</div>
 
-    <div class="mt-4">
-        <a class="btn btn-primary me-2" href="@Url.Action("GenerateAllPdf", "Skladiste")">Generiraj PDF svih materijala<a/>
-    </div>
+<table class="table table-striped" id="materijaliTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Naziv</th>
+            <th>Količina</th>
+            <th>Mjerna Jedinica</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Naziv</td>
+                <td>@item.Kolicina</td>
+                <td>@item.Jedinica</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="mt-4">
+    <a class="btn btn-primary me-2" href="@Url.Action("GenerateAllPdf", "Skladiste")">Generiraj PDF svih materijala</a>
+</div>
 
 @section Scripts {
-        <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-        <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
 
-        <script>
-            let isScanActive = false;
-            let scanTimeout = null;
-            let currentScan = '';
+    <script>
+        let isScanActive = false;
+        let scanTimeout = null;
+        let currentScan = '';
 
-            
-            document.getElementById('scanSkenerBtn').addEventListener('click', function () {
-                isScanActive = !isScanActive;
-                const btn = this;
-                const scannedDiv = document.getElementById('scannedSection');
-                if (isScanActive) {
-                    btn.classList.remove('btn-info');
-                    btn.classList.add('btn-danger');
-                    btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniranje aktivno (klikni za stop)';
-                    document.getElementById('hiddenBarcodeInput').focus();
-                    scannedDiv.style.display = 'block'; 
-                } else {
-                    btn.classList.remove('btn-danger');
-                    btn.classList.add('btn-info');
-                    btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniraj skenerom za provjeru stanja';
-                    document.activeElement.blur();
-                }
-            });
+        document.getElementById('scanSkenerBtn').addEventListener('click', function() {
+            isScanActive = !isScanActive;
+            const btn = this;
+            const scannedDiv = document.getElementById('scannedSection');
+            if (isScanActive) {
+                btn.classList.remove('btn-info');
+                btn.classList.add('btn-danger');
+                btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniranje aktivno (klikni za stop)';
+                document.getElementById('hiddenBarcodeInput').focus();
+                scannedDiv.style.display = 'block';
 
-            
-            function processScan(barcodeData) {
-                barcodeData = barcodeData.replace(/\s/g, ''); 
-                console.log('Očišćeni podatak: "' + barcodeData + '"');
-                
-                const matches = barcodeData.match(/MaterijalId:(\d+)/g) || [];
-                const barkodovi = matches.map(match => match.replace('MaterijalId:', ''));
-                console.log('Izvučeni ID-ovi: ', barkodovi); 
-                if (barkodovi.length === 0) {
-                    console.warn('Nema valjanih ID-ova u skenu.');
+            } else {
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-info');
+                btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniraj skenerom za provjeru stanja';
+                document.activeElement.blur();
+            }
+        });
+
+        function processScan(barcodeData) {
+            barcodeData = barcodeData.replace(/\s/g, '');
+
+            console.log('Očišćeni podatak: "' + barcodeData + '"');
+
+            const matches = barcodeData.match(/MaterijalId:(\d+)/g) || [];
+            const barkodovi = matches.map(match => match.replace('MaterijalId:', ''));
+            console.log('Izvučeni ID-ovi: ', barkodovi);
+
+            if (barkodovi.length === 0) {
+                console.warn('Nema valjanih ID-ova u skenu.');
+                return;
+            }
+            barkodovi.forEach(idStr => {
+                const id = parseInt(idStr);
+                if (isNaN(id)) {
+                    console.warn('Preskačem nevaljani ID: ' + idStr);
+                    alert('Upozorenje: Nevaljani ID pronađen (dobiven: ' + idStr + '). Preskačem.');
                     return;
                 }
-                barkodovi.forEach(idStr => {
-                    const id = parseInt(idStr);
-                    if (isNaN(id)) {
-                        console.warn('Preskačem nevaljani ID: ' + idStr);
-                        alert('Upozorenje: Nevaljani ID pronađen (dobiven: ' + idStr + '). Preskačem.');
-                        return;
+                console.log('Dohvaćam materijal za ID: ' + id);
+
+                $.get('/Skladiste/GetMaterijal?id=' + id, function(data) {
+                    if (data.success) {
+
+                        let row = `<tr><td>${data.naziv}</td><td>${data.kolicina != null ? data.kolicina : 'N/A'}</td><td>${data.jedinica}</td></tr>`;
+                        document.querySelector('#scannedItems tbody').innerHTML += row;
+                    } else {
+                        alert('Greška: Materijal nije pronađen za ID: ' + id);
                     }
-                    console.log('Dohvaćam materijal za ID: ' + id); 
-                    $.get('/Skladiste/GetMaterijal?id=' + id, function (data) {
-                        if (data.success) {
-                            
-                            let row = `<tr><td>${data.naziv}</td><td>${data.kolicina != null ? data.kolicina : 'N/A'}</td><td>${data.jedinica}</td></tr>`;
-                            document.querySelector('#scannedItems tbody').innerHTML += row;
-                        } else {
-                            alert('Greška: Materijal nije pronađen za ID: ' + id);
-                        }
-                    }).fail(function () {
-                        alert('Greška u dohvaćanju materijala za ID: ' + id);
-                    });
+                }).fail(function() {
+                    alert('Greška u dohvaćanju materijala za ID: ' + id);
                 });
-            }
-
-            
-            document.getElementById('hiddenBarcodeInput').addEventListener('input', (event) => {
-                if (!isScanActive) return;
-                currentScan = event.target.value;
-                console.log('Trenutni input: ' + currentScan); 
-                if (scanTimeout) clearTimeout(scanTimeout);
-                scanTimeout = setTimeout(() => {
-                    if (currentScan) {
-                        console.log('Processing scan after pause: ' + currentScan); 
-                        processScan(currentScan);
-                        event.target.value = '';
-                        currentScan = '';
-                    }
-                }, 100); 
             });
+        }
 
-           
-            document.getElementById('resetScanned').addEventListener('click', function () {
-                document.querySelector('#scannedItems tbody').innerHTML = '';
-                document.getElementById('scannedSection').style.display = 'none';
-                isScanActive = false;
-                const scanBtn = document.getElementById('scanSkenerBtn');
-                scanBtn.classList.remove('btn-danger');
-                scanBtn.classList.add('btn-info');
-                scanBtn.innerHTML = '<i class="fas fa-barcode"></i> Skeniraj skenerom za provjeru stanja';
-                document.activeElement.blur();
-            });
+        document.getElementById('hiddenBarcodeInput').addEventListener('input', (event) => {
+            if (!isScanActive) return;
+            currentScan = event.target.value;
+            console.log('Trenutni input: ' + currentScan);
 
-            
-            $('#materijaliTable').DataTable({
-                language: {
+            if (scanTimeout) clearTimeout(scanTimeout);
+            scanTimeout = setTimeout(() => {
+                if (currentScan) {
+                    console.log('Processing scan after pause: ' + currentScan);
+
+                    processScan(currentScan);
+                    event.target.value = '';
+                    currentScan = '';
+                }
+            }, 100);
+
+        });
+
+        document.getElementById('resetScanned').addEventListener('click', function() {
+            document.querySelector('#scannedItems tbody').innerHTML = '';
+            document.getElementById('scannedSection').style.display = 'none';
+            isScanActive = false;
+            const scanBtn = document.getElementById('scanSkenerBtn');
+            scanBtn.classList.remove('btn-danger');
+            scanBtn.classList.add('btn-info');
+            scanBtn.innerHTML = '<i class="fas fa-barcode"></i> Skeniraj skenerom za provjeru stanja';
+            document.activeElement.blur();
+        });
+
+        $('#materijaliTable').DataTable({
+            language: {
                 url: 'https://cdn.datatables.net/plug-ins/1.13.4/i18n/hr.json'
-                },
-                pageLength: 25,
-                searching: false,
-                lengthChange: true,
-                dom: '<"datatable-top"l>rt<"datatable-bottom"ip>'
-            });
+            },
+            pageLength: 25,
+            searching: false,
+            lengthChange: true,
+            dom: '<"datatable-top"l>rt<"datatable-bottom"ip>'
+        });
 
-            
-            $(document).on('focus', '.naziv-autocomplete', function () {
-                $(this).autocomplete({
-                    source: function (request, response) {
-                        $.get("/Skladiste/SearchMaterijali?term=" + request.term, function (data) {
-                            response($.map(data, function (item) {
-                                return {
-                                    label: item.naziv + " (" + item.jedinica + ")",
-                                    value: item.naziv,
-                                    jedinica: item.jedinica
-                                };
-                            }));
-                        });
-                    },
-                    select: function (event, ui) {
-                        $(this).val(ui.item.value);
-                        
-                        var jedinicaSelect = $(this).closest('.bulk-item').find('select[name$=".Jedinica"]');
-                        if (jedinicaSelect.length > 0) {
-                            jedinicaSelect.val(ui.item.jedinica);
-                        }
-                        return false;
+        $(document).on('focus', '.naziv-autocomplete', function() {
+            $(this).autocomplete({
+                source: function(request, response) {
+                    $.get("/Skladiste/SearchMaterijali?term=" + request.term, function(data) {
+                        response($.map(data, function(item) {
+                            return {
+                                label: item.naziv + " (" + item.jedinica + ")",
+                                value: item.naziv,
+                                jedinica: item.jedinica
+                            };
+                        }));
+                    });
+                },
+                select: function(event, ui) {
+                    $(this).val(ui.item.value);
+
+                    var jedinicaSelect = $(this).closest('.bulk-item').find('select[name$=".Jedinica"]');
+                    if (jedinicaSelect.length > 0) {
+                        jedinicaSelect.val(ui.item.jedinica);
                     }
-                });
+                    return false;
+                }
             });
-        </script>
+        });
+    </script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }

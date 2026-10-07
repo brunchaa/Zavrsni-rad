@@ -4,8 +4,8 @@ using ZXing;
 using ZXing.Common;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO.Compression;
 using SkladisteRobe.Data;
-
 
 namespace SkladisteRobe.Controllers
 {
@@ -13,50 +13,90 @@ namespace SkladisteRobe.Controllers
     public class BarcodeController : Controller
     {
         private readonly AppDbContext _context;
+
         public BarcodeController(AppDbContext context)
         {
             _context = context;
         }
+
         public IActionResult Scan(string tip)
         {
-            if (string.IsNullOrEmpty(tip) || (tip != "ulaz" && tip != "izlaz" && tip != "pretraga"))
+            if (string.IsNullOrEmpty(tip) ||
+                (tip != "ulaz" && tip != "izlaz" && tip != "pretraga"))
             {
                 return BadRequest("Neispravan tip operacije.");
             }
+
             ViewBag.Tip = tip;
+
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> ProcessScan(string barcodeData, string tip)
         {
             try
             {
                 var parts = barcodeData.Split(':');
+
                 if (parts.Length != 2 || parts[0] != "MaterijalId")
-                    return Json(new { success = false, message = "Neispravan barkod" });
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Neispravan barkod"
+                    });
+
                 if (!int.TryParse(parts[1], out int materijalId))
-                    return Json(new { success = false, message = "Neispravan ID materijala" });
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Neispravan ID materijala"
+                    });
+
                 var materijal = await _context.Materijali.FindAsync(materijalId);
+
                 if (materijal == null)
-                    return Json(new { success = false, message = "Materijal ne postoji" });
-                return Json(new { success = true, naziv = materijal.Naziv, jedinica = materijal.Jedinica.ToString(), id = materijal.Id, kolicina = materijal.Kolicina });
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Materijal ne postoji"
+                    });
+
+                return Json(new
+                {
+                    success = true,
+                    naziv = materijal.Naziv,
+                    jedinica = materijal.Jedinica.ToString(),
+                    id = materijal.Id,
+                    kolicina = materijal.Kolicina
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return Json(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
             }
         }
+
         public IActionResult GenerateBarcode(int materijalId)
         {
             var materijal = _context.Materijali.Find(materijalId);
+
             if (materijal == null)
                 return NotFound("Materijal ne postoji");
+
             var barcodeText = $"MaterijalId:{materijalId}";
+
             materijal.QRCodeData = barcodeText;
             _context.SaveChanges();
+
             var barcodeWriter = new BarcodeWriterPixelData
             {
                 Format = BarcodeFormat.QR_CODE,
+
                 Options = new EncodingOptions
                 {
                     Height = 200,
@@ -64,22 +104,149 @@ namespace SkladisteRobe.Controllers
                     Margin = 10
                 }
             };
+
             var pixelData = barcodeWriter.Write(barcodeText);
-            using (var bitmap = new Bitmap(pixelData.Width, pixelData.Height, PixelFormat.Format32bppRgb))
+
+            using (var bitmap = new Bitmap(
+                pixelData.Width,
+                pixelData.Height,
+                PixelFormat.Format32bppRgb))
             using (var ms = new MemoryStream())
             {
-                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, pixelData.Width, pixelData.Height), ImageLockMode.WriteOnly, PixelFormat.Format32bppRgb);
+                var bitmapData = bitmap.LockBits(
+                    new Rectangle(
+                        0,
+                        0,
+                        pixelData.Width,
+                        pixelData.Height),
+                    ImageLockMode.WriteOnly,
+                    PixelFormat.Format32bppRgb
+                );
+
                 try
                 {
-                    System.Runtime.InteropServices.Marshal.Copy(pixelData.Pixels, 0, bitmapData.Scan0, pixelData.Pixels.Length);
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        pixelData.Pixels,
+                        0,
+                        bitmapData.Scan0,
+                        pixelData.Pixels.Length
+                    );
                 }
                 finally
                 {
                     bitmap.UnlockBits(bitmapData);
                 }
+
                 bitmap.Save(ms, ImageFormat.Png);
-                return File(ms.ToArray(), "image/png", $"qr_{materijalId}.png");
+
+                return File(
+                    ms.ToArray(),
+                    "image/png",
+                    $"qr_{materijalId}.png"
+                );
             }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet]
+        public IActionResult PreuzmiSveBarkodove()
+        {
+            var materijali = _context.Materijali.ToList();
+
+            if (!materijali.Any())
+            {
+                return NotFound("Nema materijala u bazi.");
+            }
+
+            using var zipStream = new MemoryStream();
+
+            using (var archive = new ZipArchive(
+                zipStream,
+                ZipArchiveMode.Create,
+                true))
+            {
+                foreach (var materijal in materijali)
+                {
+                    var barcodeText = $"MaterijalId:{materijal.Id}";
+
+                    materijal.QRCodeData = barcodeText;
+
+                    var barcodeWriter = new BarcodeWriterPixelData
+                    {
+                        Format = BarcodeFormat.CODE_128,
+                        Options = new EncodingOptions
+                        {
+                            Height = 120,
+                            Width = 500,
+                            Margin = 10,
+                            PureBarcode = false
+                        }
+                    };
+
+                    var pixelData = barcodeWriter.Write(barcodeText);
+
+                    using var bitmap = new Bitmap(
+                        pixelData.Width,
+                        pixelData.Height,
+                        PixelFormat.Format32bppRgb
+                    );
+
+                    var bitmapData = bitmap.LockBits(
+                        new Rectangle(
+                            0,
+                            0,
+                            pixelData.Width,
+                            pixelData.Height),
+                        ImageLockMode.WriteOnly,
+                        PixelFormat.Format32bppRgb
+                    );
+
+                    try
+                    {
+                        System.Runtime.InteropServices.Marshal.Copy(
+                            pixelData.Pixels,
+                            0,
+                            bitmapData.Scan0,
+                            pixelData.Pixels.Length
+                        );
+                    }
+                    finally
+                    {
+                        bitmap.UnlockBits(bitmapData);
+                    }
+
+                    using var imageStream = new MemoryStream();
+
+                    bitmap.Save(imageStream, ImageFormat.Png);
+
+                    var safeName = string.Concat(
+                        materijal.Naziv.Select(c =>
+                            Path.GetInvalidFileNameChars().Contains(c)
+                                ? '_'
+                                : c)
+                    );
+
+                    var entry = archive.CreateEntry(
+                        $"{materijal.Id}_{safeName}.png"
+                    );
+
+                    using var entryStream = entry.Open();
+
+                    imageStream.Position = 0;
+
+                    imageStream.CopyTo(entryStream);
+                }
+            }
+
+            _context.SaveChanges();
+
+            zipStream.Position = 0;
+
+            return File(
+                zipStream.ToArray(),
+                "application/zip",
+                "Svi_barKodovi.zip"
+            );
         }
     }
 }
