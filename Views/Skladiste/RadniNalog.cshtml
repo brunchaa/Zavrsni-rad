@@ -3,347 +3,1110 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Radni nalog";
 }
+
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+<div id="formMessage" class="alert alert-danger d-none" role="alert"></div>
+
 <div class="container my-5">
     <div class="card shadow-lg border-0 rounded-3">
         <div class="card-header bg-primary text-white rounded-top p-4">
             <h2 class="mb-0">Radni nalog</h2>
         </div>
+
         <div class="card-body p-4">
+
             @Html.ValidationSummary(true, "", new { @class = "text-danger alert alert-danger mb-4" })
-            <form asp-controller="Skladiste" asp-action="RadniNalog" method="post" id="bulkForm">
+
+            <form asp-controller="Skladiste"
+                  asp-action="RadniNalog"
+                  method="post"
+                  id="bulkForm">
+
                 @Html.AntiForgeryToken()
+
                 <div id="itemsContainer">
-                    <div class="bulk-item mb-4 p-3 border rounded bg-light" data-index="0">
+
+                    <div class="bulk-item mb-4 p-3 border rounded bg-light"
+                         data-index="0">
+
                         <div class="row g-3">
+
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">Naziv materijala</label>
-                                <input type="text" name="Items[0].Naziv" class="form-control naziv-autocomplete" required />
+                                <label class="form-label fw-bold">
+                                    Naziv materijala
+                                </label>
+
+                                <input type="text"
+                                       name="Items[0].Naziv"
+                                       class="form-control naziv-autocomplete"
+                                       required />
                             </div>
+
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Količina</label>
-                                <input type="number" name="Items[0].Kolicina" class="form-control" required min="1" placeholder="1" />
+                                <label class="form-label fw-bold">
+                                    Količina
+                                </label>
+
+                                <input type="number"
+                                       name="Items[0].Kolicina"
+                                       class="form-control"
+                                       required
+                                       min="1"
+                                       placeholder="1" />
                             </div>
+
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Mjerna jedinica</label>
-                                <select name="Items[0].Jedinica" class="form-select" required>
+                                <label class="form-label fw-bold">
+                                    Mjerna jedinica
+                                </label>
+
+                                <select name="Items[0].Jedinica"
+                                        class="form-select"
+                                        required>
+
                                     <option value="">Odaberi...</option>
                                     <option value="KOMAD">KOMAD</option>
                                     <option value="METAR">METAR</option>
                                     <option value="m2">m2</option>
+
                                 </select>
                             </div>
+
                             <div class="col-md-2 d-flex align-items-end">
-                                <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
+
+                                <button type="button"
+                                        class="btn btn-danger w-100 removeItemBtn">
+
+                                    <i class="fas fa-trash"></i>
+                                    Ukloni
+
+                                </button>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
+
                 <div class="d-flex justify-content-start mb-4">
-                    <button type="button" id="addItemBtn" class="btn btn-secondary me-2"><i class="fas fa-plus"></i> Dodaj stavku ručno</button>
-                    <button type="button" id="scanSkenerBtn" class="btn btn-info me-2"><i class="fas fa-barcode"></i> Skeniraj skenerom</button>
+
+                    <button type="button"
+                            id="addItemBtn"
+                            class="btn btn-secondary me-2">
+
+                        <i class="fas fa-plus"></i>
+                        Dodaj stavku ručno
+
+                    </button>
+
+                    <button type="button"
+                            id="scanSkenerBtn"
+                            class="btn btn-info me-2">
+
+                        <i class="fas fa-barcode"></i>
+                        Skeniraj skenerom
+
+                    </button>
+
                 </div>
-                
-                <input type="text" id="hiddenBarcodeInput" style="position: absolute; left: -9999px;" />
+
+                <input type="text"
+                       id="hiddenBarcodeInput"
+                       style="position: absolute; left: -9999px;" />
+
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="button" id="submitPrimka" class="btn btn-success me-md-2"><i class="fas fa-arrow-down"></i> Primka</button>
-                    <button type="button" id="submitIzdaj" class="btn btn-warning"><i class="fas fa-arrow-up"></i> Međuskladišnica</button>
+
+                    <button type="button"
+                            id="submitPrimka"
+                            class="btn btn-success me-md-2">
+
+                        <i class="fas fa-arrow-down"></i>
+                        Primka
+
+                    </button>
+
+                    <button type="button"
+                            id="submitIzdaj"
+                            class="btn btn-warning">
+
+                        <i class="fas fa-arrow-up"></i>
+                        Međuskladišnica
+
+                    </button>
+
                 </div>
+
             </form>
+
         </div>
     </div>
 </div>
+
 @section Scripts {
+
     <script src="https://unpkg.com/@@zxing/library@@latest"></script>
 
     <script>
+
         let itemIndex = 1;
         let isScanActive = false;
         let scanTimeout = null;
         let currentScan = '';
-        
+
+
+        function showFormMessage(message) {
+
+            const messageBox = document.getElementById('formMessage');
+
+            messageBox.textContent = message;
+            messageBox.classList.remove('d-none');
+
+            messageBox.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+
+
+        function hideFormMessage() {
+
+            const messageBox = document.getElementById('formMessage');
+
+            messageBox.textContent = '';
+            messageBox.classList.add('d-none');
+        }
+
+
         function updateRemoveButtons() {
+
             const items = document.querySelectorAll('.bulk-item');
-            const removeBtns = document.querySelectorAll('.removeItemBtn');
+            const removeBtns =
+                document.querySelectorAll('.removeItemBtn');
+
             if (items.length <= 1) {
-                removeBtns.forEach(btn => btn.style.display = 'none');
+
+                removeBtns.forEach(
+                    btn => btn.style.display = 'none'
+                );
+
             } else {
-                removeBtns.forEach(btn => btn.style.display = 'block');
+
+                removeBtns.forEach(
+                    btn => btn.style.display = 'block'
+                );
             }
         }
-        
-        document.getElementById('addItemBtn').addEventListener('click', function () {
-            const container = document.getElementById('itemsContainer');
-            const div = document.createElement('div');
-            div.classList.add('bulk-item', 'mb-4', 'p-3', 'border', 'rounded', 'bg-light');
-            div.setAttribute('data-index', itemIndex);
-            div.innerHTML = `
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-bold">Naziv materijala</label>
-                        <input type="text" name="Items[${itemIndex}].Naziv" class="form-control naziv-autocomplete" required placeholder="Unesite naziv" />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Količina</label>
-                        <input type="number" name="Items[${itemIndex}].Kolicina" class="form-control" required min="1" placeholder="1" />
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label fw-bold">Mjerna jedinica</label>
-                        <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
-                            <option value="">Odaberi...</option>
-                            <option value="KOMAD">KOMAD</option>
-                            <option value="METAR">METAR</option>
-                            <option value="m2">m2</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(div);
-            itemIndex++;
-            updateRemoveButtons();
-        });
-        
+
+
+        document.getElementById('addItemBtn')
+            .addEventListener('click', function() {
+
+                hideFormMessage();
+
+                const container =
+                    document.getElementById('itemsContainer');
+
+                const div =
+                    document.createElement('div');
+
+                div.classList.add(
+                    'bulk-item',
+                    'mb-4',
+                    'p-3',
+                    'border',
+                    'rounded',
+                    'bg-light'
+                );
+
+                div.setAttribute(
+                    'data-index',
+                    itemIndex
+                );
+
+                div.innerHTML = `
+
+                            <div class="row g-3">
+
+                                <div class="col-md-4">
+
+                                    <label class="form-label fw-bold">
+                                        Naziv materijala
+                                    </label>
+
+                                    <input type="text"
+                                           name="Items[${itemIndex}].Naziv"
+                                           class="form-control naziv-autocomplete"
+                                           required
+                                           placeholder="Unesite naziv" />
+
+                                </div>
+
+                                <div class="col-md-3">
+
+                                    <label class="form-label fw-bold">
+                                        Količina
+                                    </label>
+
+                                    <input type="number"
+                                           name="Items[${itemIndex}].Kolicina"
+                                           class="form-control"
+                                           required
+                                           min="1"
+                                           placeholder="1" />
+
+                                </div>
+
+                                <div class="col-md-3">
+
+                                    <label class="form-label fw-bold">
+                                        Mjerna jedinica
+                                    </label>
+
+                                    <select name="Items[${itemIndex}].Jedinica"
+                                            class="form-select"
+                                            required>
+
+                                        <option value="">
+                                            Odaberi...
+                                        </option>
+
+                                        <option value="KOMAD">
+                                            KOMAD
+                                        </option>
+
+                                        <option value="METAR">
+                                            METAR
+                                        </option>
+
+                                        <option value="m2">
+                                            m2
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-2 d-flex align-items-end">
+
+                                    <button type="button"
+                                            class="btn btn-danger w-100 removeItemBtn">
+
+                                        <i class="fas fa-trash"></i>
+                                        Ukloni
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+                        `;
+
+                container.appendChild(div);
+
+                itemIndex++;
+
+                updateRemoveButtons();
+            });
+
+
         function addScannedItem(scannedData) {
-            const container = document.getElementById('itemsContainer');
-            const items = container.querySelectorAll('.bulk-item');
+
+            hideFormMessage();
+
+            const container =
+                document.getElementById('itemsContainer');
+
+            const items =
+                container.querySelectorAll('.bulk-item');
+
             let filled = false;
-            
+
+
             items.forEach(item => {
-                if (filled) return;
-                const nazivInput = item.querySelector('input[name$=".Naziv"]');
-                if (nazivInput && nazivInput.value.trim() === '') {
-                    nazivInput.value = scannedData.naziv;
-                    const kolicinaInput = item.querySelector('input[name$=".Kolicina"]');
-                    if (kolicinaInput) kolicinaInput.value = 1;
-                    const jedinicaSelect = item.querySelector('select[name$=".Jedinica"]');
-                    if (jedinicaSelect && scannedData.jedinica) {
-                        jedinicaSelect.value = scannedData.jedinica;
+
+                if (filled)
+                    return;
+
+                const nazivInput =
+                    item.querySelector(
+                        'input[name$=".Naziv"]'
+                    );
+
+                if (
+                    nazivInput &&
+                    nazivInput.value.trim() === ''
+                ) {
+
+                    nazivInput.value =
+                        scannedData.naziv;
+
+                    const kolicinaInput =
+                        item.querySelector(
+                            'input[name$=".Kolicina"]'
+                        );
+
+                    if (kolicinaInput)
+                        kolicinaInput.value = 1;
+
+
+                    const jedinicaSelect =
+                        item.querySelector(
+                            'select[name$=".Jedinica"]'
+                        );
+
+                    if (
+                        jedinicaSelect &&
+                        scannedData.jedinica
+                    ) {
+
+                        jedinicaSelect.value =
+                            scannedData.jedinica;
                     }
+
                     filled = true;
                 }
             });
-            
+
+
             if (!filled) {
-                const div = document.createElement('div');
-                div.classList.add('bulk-item', 'mb-4', 'p-3', 'border', 'rounded', 'bg-light');
-                div.setAttribute('data-index', itemIndex);
+
+                const div =
+                    document.createElement('div');
+
+                div.classList.add(
+                    'bulk-item',
+                    'mb-4',
+                    'p-3',
+                    'border',
+                    'rounded',
+                    'bg-light'
+                );
+
+                div.setAttribute(
+                    'data-index',
+                    itemIndex
+                );
+
                 div.innerHTML = `
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold">Naziv materijala</label>
-                            <input type="text" name="Items[${itemIndex}].Naziv" value="${scannedData.naziv}" class="form-control naziv-autocomplete" required />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Količina</label>
-                            <input type="number" name="Items[${itemIndex}].Kolicina" value="1" class="form-control" required min="1" />
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Mjerna jedinica</label>
-                            <select name="Items[${itemIndex}].Jedinica" class="form-select" required>
-                                <option value="">Odaberi...</option>
-                                <option value="KOMAD">KOMAD</option>
-                                <option value="METAR">METAR</option>
-                                <option value="m2">m2</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-danger w-100 removeItemBtn"><i class="fas fa-trash"></i> Ukloni</button>
-                        </div>
-                    </div>
-                `;
-                const jedinicaSelect = div.querySelector('select[name$=".Jedinica"]');
+
+                            <div class="row g-3">
+
+                                <div class="col-md-4">
+
+                                    <label class="form-label fw-bold">
+                                        Naziv materijala
+                                    </label>
+
+                                    <input type="text"
+                                           name="Items[${itemIndex}].Naziv"
+                                           value="${scannedData.naziv}"
+                                           class="form-control naziv-autocomplete"
+                                           required />
+
+                                </div>
+
+                                <div class="col-md-3">
+
+                                    <label class="form-label fw-bold">
+                                        Količina
+                                    </label>
+
+                                    <input type="number"
+                                           name="Items[${itemIndex}].Kolicina"
+                                           value="1"
+                                           class="form-control"
+                                           required
+                                           min="1" />
+
+                                </div>
+
+                                <div class="col-md-3">
+
+                                    <label class="form-label fw-bold">
+                                        Mjerna jedinica
+                                    </label>
+
+                                    <select name="Items[${itemIndex}].Jedinica"
+                                            class="form-select"
+                                            required>
+
+                                        <option value="">
+                                            Odaberi...
+                                        </option>
+
+                                        <option value="KOMAD">
+                                            KOMAD
+                                        </option>
+
+                                        <option value="METAR">
+                                            METAR
+                                        </option>
+
+                                        <option value="m2">
+                                            m2
+                                        </option>
+
+                                    </select>
+
+                                </div>
+
+                                <div class="col-md-2 d-flex align-items-end">
+
+                                    <button type="button"
+                                            class="btn btn-danger w-100 removeItemBtn">
+
+                                        <i class="fas fa-trash"></i>
+                                        Ukloni
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+                        `;
+
+
+                const jedinicaSelect =
+                    div.querySelector(
+                        'select[name$=".Jedinica"]'
+                    );
+
                 if (scannedData.jedinica) {
-                    jedinicaSelect.value = scannedData.jedinica;
+
+                    jedinicaSelect.value =
+                        scannedData.jedinica;
                 }
+
+
                 container.appendChild(div);
+
                 itemIndex++;
             }
+
+
             updateRemoveButtons();
         }
-        
+
+
         function processScan(barcodeData) {
-            barcodeData = barcodeData.replace(/\s/g, ''); 
-            console.log('Očišćeni podatak: "' + barcodeData + '"'); 
-            
-            const matches = barcodeData.match(/MaterijalId:(\d+)/g) || [];
-            const barkodovi = matches.map(match => match.replace('MaterijalId:', ''));
-            console.log('Izvučeni ID-ovi: ', barkodovi); 
+
+            hideFormMessage();
+
+            barcodeData =
+                barcodeData.replace(/\s/g, '');
+
+
+            const matches =
+                barcodeData.match(
+                    /MaterijalId:(\d+)/g
+                ) || [];
+
+
+            const barkodovi =
+                matches.map(
+                    match =>
+                        match.replace(
+                            'MaterijalId:',
+                            ''
+                        )
+                );
+
+
             if (barkodovi.length === 0) {
-                console.warn('Nema valjanih ID-ova u skenu.');
+
+                showFormMessage(
+                    'Očitani barkod nije ispravan.'
+                );
+
                 return;
             }
+
+
             barkodovi.forEach(idStr => {
-                const id = parseInt(idStr);
+
+                const id =
+                    parseInt(idStr);
+
+
                 if (isNaN(id)) {
-                    console.warn('Preskačem nevaljani ID: ' + idStr);
-                    alert('Upozorenje: Nevaljani ID pronađen (dobiven: ' + idStr + '). Preskačem.');
+
+                    showFormMessage(
+                        'Očitani barkod sadrži neispravan podatak.'
+                    );
+
                     return;
                 }
-                console.log('Dohvaćam materijal za ID: ' + id); 
-                $.get('/Skladiste/GetMaterijal?id=' + id, function (data) {
-                    if (data.success) {
-                        addScannedItem({ naziv: data.naziv, jedinica: data.jedinica });
-                    } else {
-                        alert('Greška: Materijal nije pronađen za ID: ' + id);
+
+
+                $.get(
+                    '/Skladiste/GetMaterijal?id=' + id,
+
+                    function(data) {
+
+                        if (data.success) {
+
+                            addScannedItem({
+                                naziv: data.naziv,
+                                jedinica: data.jedinica
+                            });
+
+                        } else {
+
+                            showFormMessage(
+                                'Materijal nije pronađen.'
+                            );
+                        }
                     }
-                }).fail(function () {
-                    alert('Greška u dohvaćanju materijala za ID: ' + id);
+
+                ).fail(function() {
+
+                    showFormMessage(
+                        'Materijal trenutno nije moguće dohvatiti.'
+                    );
                 });
             });
         }
-        
-        document.getElementById('scanSkenerBtn').addEventListener('click', function () {
-            isScanActive = !isScanActive;
-            const btn = this;
-            if (isScanActive) {
-                btn.classList.remove('btn-info');
-                btn.classList.add('btn-danger');
-                btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniranje aktivno (klikni za stop)';
-                document.getElementById('hiddenBarcodeInput').focus();
-            } else {
-                btn.classList.remove('btn-danger');
-                btn.classList.add('btn-info');
-                btn.innerHTML = '<i class="fas fa-barcode"></i> Skeniraj skenerom';
-                document.activeElement.blur();
-            }
-        });
-        
-        document.getElementById('hiddenBarcodeInput').addEventListener('input', (event) => {
-            if (!isScanActive) return;
-            currentScan = event.target.value;
-            console.log('Trenutni input: ' + currentScan); 
-            if (scanTimeout) clearTimeout(scanTimeout);
-            scanTimeout = setTimeout(() => {
-                if (currentScan) {
-                    console.log('Processing scan after pause: ' + currentScan); 
-                    processScan(currentScan);
-                    event.target.value = '';
-                    currentScan = '';
-                }
-            }, 100); 
-        });
-        
-        $(document).on('focus', '.naziv-autocomplete', function () {
-            $(this).autocomplete({
-                source: function (request, response) {
-                    $.get("/Skladiste/SearchMaterijali?term=" + request.term, function (data) {
-                        response($.map(data, function (item) {
-                            return {
-                                label: item.naziv + " (" + item.jedinica + ")",
-                                value: item.naziv,
-                                jedinica: item.jedinica
-                            };
-                        }));
-                    });
-                },
-                select: function (event, ui) {
-                    $(this).val(ui.item.value);
-                    var jedinicaSelect = $(this).closest('.bulk-item').find('select[name$=".Jedinica"]');
-                    if (jedinicaSelect.length > 0) {
-                        jedinicaSelect.val(ui.item.jedinica);
-                    }
-                    return false;
+
+
+        document.getElementById('scanSkenerBtn')
+            .addEventListener('click', function() {
+
+                hideFormMessage();
+
+                isScanActive =
+                    !isScanActive;
+
+                const btn = this;
+
+
+                if (isScanActive) {
+
+                    btn.classList.remove(
+                        'btn-info'
+                    );
+
+                    btn.classList.add(
+                        'btn-danger'
+                    );
+
+                    btn.innerHTML =
+                        '<i class="fas fa-barcode"></i> Skeniranje aktivno (klikni za stop)';
+
+                    document
+                        .getElementById(
+                            'hiddenBarcodeInput'
+                        )
+                        .focus();
+
+                } else {
+
+                    btn.classList.remove(
+                        'btn-danger'
+                    );
+
+                    btn.classList.add(
+                        'btn-info'
+                    );
+
+                    btn.innerHTML =
+                        '<i class="fas fa-barcode"></i> Skeniraj skenerom';
+
+                    document.activeElement.blur();
                 }
             });
-        });
-        
-        $(document).ready(function () {
-        console.log('✅ Skripta se učitala i čeka klikove');
 
-        
-        console.log('tipka Primka:', $('#submitPrimka').length ? 'NAĐENO ✅' : 'NIJE NAĐENO ❌');
-        console.log('tipka Međuskladišnica:', $('#submitIzdaj').length ? 'NAĐENO ✅' : 'NIJE NAĐENO ❌');
-        console.log('Forma #bulkForm:', $('#bulkForm').length ? 'NAĐENO ✅' : 'NIJE NAĐENO ❌');
 
-        $('#submitPrimka').click(function () {
-        console.log('🔥 Kliknuto na PRIMKA tipka');
-        submitForm('Primka');
-        });
+        document
+            .getElementById('hiddenBarcodeInput')
+            .addEventListener(
+                'input',
+                (event) => {
 
-        $('#submitIzdaj').click(function () {
-        console.log('🔥 Kliknuto na Međuskladišnica tipka');
-        submitForm('Međuskladišnica');
-        });
-        });
+                    if (!isScanActive)
+                        return;
+
+
+                    currentScan =
+                        event.target.value;
+
+
+                    if (scanTimeout)
+                        clearTimeout(scanTimeout);
+
+
+                    scanTimeout =
+                        setTimeout(() => {
+
+                            if (currentScan) {
+
+                                processScan(
+                                    currentScan
+                                );
+
+                                event.target.value =
+                                    '';
+
+                                currentScan =
+                                    '';
+                            }
+
+                        }, 100);
+                }
+            );
+
+
+        /*
+         * AUTOCOMPLETE / PRETRAGA MATERIJALA
+         * OVO JE OSTAVLJENO KAO U TVOM KODU.
+         */
+        $(document).on(
+            'focus',
+            '.naziv-autocomplete',
+            function() {
+
+                $(this).autocomplete({
+
+                    source:
+                        function(
+                            request,
+                            response
+                        ) {
+
+                            $.get(
+                                "/Skladiste/SearchMaterijali?term=" +
+                                request.term,
+
+                                function(data) {
+
+                                    response(
+                                        $.map(
+                                            data,
+                                            function(item) {
+
+                                                return {
+
+                                                    label:
+                                                        item.naziv +
+                                                        " (" +
+                                                        item.jedinica +
+                                                        ")",
+
+                                                    value:
+                                                        item.naziv,
+
+                                                    jedinica:
+                                                        item.jedinica
+                                                };
+                                            }
+                                        )
+                                    );
+                                }
+                            );
+                        },
+
+
+                    select:
+                        function(
+                            event,
+                            ui
+                        ) {
+
+                            $(this).val(
+                                ui.item.value
+                            );
+
+
+                            var jedinicaSelect =
+                                $(this)
+                                    .closest(
+                                        '.bulk-item'
+                                    )
+                                    .find(
+                                        'select[name$=".Jedinica"]'
+                                    );
+
+
+                            if (
+                                jedinicaSelect.length >
+                                0
+                            ) {
+
+                                jedinicaSelect.val(
+                                    ui.item.jedinica
+                                );
+                            }
+
+
+                            return false;
+                        }
+                });
+            }
+        );
+
+
+        function validateForm() {
+
+            hideFormMessage();
+
+            let isValid = true;
+
+
+            document
+                .querySelectorAll(
+                    '.bulk-item'
+                )
+                .forEach(
+                    function(item) {
+
+                        const naziv =
+                            item.querySelector(
+                                'input[name$=".Naziv"]'
+                            );
+
+                        const kolicina =
+                            item.querySelector(
+                                'input[name$=".Kolicina"]'
+                            );
+
+                        const jedinica =
+                            item.querySelector(
+                                'select[name$=".Jedinica"]'
+                            );
+
+
+                        naziv.classList.remove(
+                            'is-invalid'
+                        );
+
+                        kolicina.classList.remove(
+                            'is-invalid'
+                        );
+
+                        jedinica.classList.remove(
+                            'is-invalid'
+                        );
+
+
+                        if (
+                            !naziv.value.trim()
+                        ) {
+
+                            naziv.classList.add(
+                                'is-invalid'
+                            );
+
+                            isValid = false;
+                        }
+
+
+                        if (
+                            !kolicina.value ||
+                            parseFloat(
+                                kolicina.value
+                            ) <= 0
+                        ) {
+
+                            kolicina.classList.add(
+                                'is-invalid'
+                            );
+
+                            isValid = false;
+                        }
+
+
+                        if (
+                            !jedinica.value
+                        ) {
+
+                            jedinica.classList.add(
+                                'is-invalid'
+                            );
+
+                            isValid = false;
+                        }
+                    }
+                );
+
+
+            if (!isValid) {
+
+                showFormMessage(
+                    'Potrebno je ispuniti sva obavezna polja.'
+                );
+            }
+
+
+            return isValid;
+        }
+
+
+        $(document).ready(
+            function() {
+
+                $('#submitPrimka')
+                    .click(
+                        function() {
+
+                            submitForm(
+                                'Primka'
+                            );
+                        }
+                    );
+
+
+                $('#submitIzdaj')
+                    .click(
+                        function() {
+
+                            submitForm(
+                                'Međuskladišnica'
+                            );
+                        }
+                    );
+            }
+        );
+
 
         function submitForm(submitType) {
-        console.log('🚀 submitForm pozvan sa tipom:', submitType);
 
-        var form = $('#bulkForm');
-        if (form.length === 0) {
-        console.error('❌ Forma #bulkForm nije pronađena!');
-        alert('Greška: Forma #bulkForm nije pronađena!');
-        return;
-        }
+            hideFormMessage();
 
-        var formData = new FormData(form[0]);
-        formData.append('submitType', submitType);
-        console.log('📦 FormData spremljen, submitType =', submitType);
 
-        $.ajax({
-        url: form.attr('action'),
-        type: 'POST',
-        data: formData,
-        processData: false,
-        contentType: false,
-        xhr: function () {
-        console.log('📡 Kreiram XMLHttpRequest sa responseType=blob');
-        var xhr = new XMLHttpRequest();
-        xhr.responseType = 'blob';
-        return xhr;
-        },
-        success: function (blob, status, xhr) {
-        console.log('✅ AJAX success! Status:', status);
-        var contentDisposition = xhr.getResponseHeader('Content-Disposition');
-        console.log('📄 Content-Disposition:', contentDisposition);
+            if (!validateForm()) {
 
-        if (!contentDisposition) {
-        console.error('❌ Server nije vratio Content-Disposition!');
-        alert('Greška: Server nije vratio datoteku.');
-        return;
-        }
+                return;
+            }
 
-        var fileName = contentDisposition.split('filename=')[1]?.replace(/"/g, '') || 'dokument.pdf';
-        console.log('📥 Download fajl:', fileName);
 
-        var url = window.URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
+            var form =
+                $('#bulkForm');
 
-        console.log('✅ Download pokrenut, reload za 800ms...');
-        setTimeout(() => location.reload(), 800);
-        },
-        error: function (xhr, status, error) {
-        console.error('❌ AJAX error!', { status, error, response: xhr.responseText });
-        alert('Greška: ' + (xhr.responseText || error));
-        }
-        });
-        }
-        
-        document.addEventListener('DOMContentLoaded', function () {
-            updateRemoveButtons();
-            
-            document.getElementById('itemsContainer').addEventListener('click', function (event) {
-                if (event.target.closest('.removeItemBtn')) {
-                    const btn = event.target.closest('.removeItemBtn');
-                    const item = btn.closest('.bulk-item');
-                    if (item) {
-                        item.remove();
-                        updateRemoveButtons();
+
+            if (form.length === 0) {
+
+                showFormMessage(
+                    'Obrazac trenutno nije moguće učitati.'
+                );
+
+                return;
+            }
+
+
+            var formData =
+                new FormData(
+                    form[0]
+                );
+
+
+            formData.append(
+                'submitType',
+                submitType
+            );
+
+
+            $('#submitPrimka, #submitIzdaj')
+                .prop(
+                    'disabled',
+                    true
+                );
+
+
+            $.ajax({
+
+                url:
+                    form.attr(
+                        'action'
+                    ),
+
+                type:
+                    'POST',
+
+                data:
+                    formData,
+
+                processData:
+                    false,
+
+                contentType:
+                    false,
+
+
+                xhr:
+                    function() {
+
+                        var xhr =
+                            new XMLHttpRequest();
+
+                        xhr.responseType =
+                            'blob';
+
+                        return xhr;
+                    },
+
+
+                success:
+                    function(
+                        blob,
+                        status,
+                        xhr
+                    ) {
+
+                        var contentDisposition =
+                            xhr.getResponseHeader(
+                                'Content-Disposition'
+                            );
+
+
+                        if (
+                            !contentDisposition
+                        ) {
+
+                            showFormMessage(
+                                'Dokument nije moguće generirati. Provjerite unesene podatke.'
+                            );
+
+                            $(
+                                '#submitPrimka, #submitIzdaj'
+                            ).prop(
+                                'disabled',
+                                false
+                            );
+
+                            return;
+                        }
+
+
+                        var fileName =
+                            contentDisposition
+                                .split(
+                                    'filename='
+                                )[1]
+                                ?.replace(
+                                    /"/g,
+                                    ''
+                                )
+                            ||
+                            'dokument.pdf';
+
+
+                        var url =
+                            window.URL
+                                .createObjectURL(
+                                    blob
+                                );
+
+
+                        var a =
+                            document
+                                .createElement(
+                                    'a'
+                                );
+
+
+                        a.href =
+                            url;
+
+                        a.download =
+                            fileName;
+
+
+                        document.body
+                            .appendChild(
+                                a
+                            );
+
+
+                        a.click();
+
+
+                        a.remove();
+
+
+                        window.URL
+                            .revokeObjectURL(
+                                url
+                            );
+
+
+                        setTimeout(
+                            () =>
+                                location.reload(),
+                            800
+                        );
+                    },
+
+
+                error:
+                    function() {
+
+                        showFormMessage(
+                            'Došlo je do pogreške tijekom obrade zahtjeva.'
+                        );
+
+
+                        $(
+                            '#submitPrimka, #submitIzdaj'
+                        ).prop(
+                            'disabled',
+                            false
+                        );
                     }
-                }
             });
-        });
+        }
+
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            function() {
+
+                updateRemoveButtons();
+
+
+                document
+                    .getElementById(
+                        'itemsContainer'
+                    )
+                    .addEventListener(
+                        'click',
+                        function(event) {
+
+                            if (
+                                event.target.closest(
+                                    '.removeItemBtn'
+                                )
+                            ) {
+
+                                const btn =
+                                    event.target.closest(
+                                        '.removeItemBtn'
+                                    );
+
+                                const item =
+                                    btn.closest(
+                                        '.bulk-item'
+                                    );
+
+
+                                if (item) {
+
+                                    item.remove();
+
+                                    updateRemoveButtons();
+
+                                    hideFormMessage();
+                                }
+                            }
+                        }
+                    );
+            }
+        );
+
     </script>
+
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
