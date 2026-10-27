@@ -90,11 +90,11 @@ namespace SkladisteRobe.Services
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn();  // ID
-                                columns.RelativeColumn(2); // Naziv
-                                columns.RelativeColumn();  // Količina
-                                columns.RelativeColumn();  // Jedinica
-                                columns.RelativeColumn();  // Barkod Data
+                                columns.RelativeColumn();  
+                                columns.RelativeColumn(2); 
+                                columns.RelativeColumn();  
+                                columns.RelativeColumn();  
+                                columns.RelativeColumn();  
                             });
 
                             table.Header(header =>
@@ -150,11 +150,11 @@ namespace SkladisteRobe.Services
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn();  // ID
-                                columns.RelativeColumn(2); // Datum
-                                columns.RelativeColumn();  // Vrijeme
-                                columns.RelativeColumn();  // Korisnik ID
-                                columns.RelativeColumn(2); // Kreirao
+                                columns.RelativeColumn();  
+                                columns.RelativeColumn(2); 
+                                columns.RelativeColumn();  
+                                columns.RelativeColumn();  
+                                columns.RelativeColumn(2); 
                             });
 
                             table.Header(header =>
@@ -218,10 +218,10 @@ namespace SkladisteRobe.Services
                             {
                                 table.ColumnsDefinition(columns =>
                                 {
-                                    columns.RelativeColumn();     // ID
-                                    columns.RelativeColumn(3);    // Naziv
-                                    columns.RelativeColumn();     // Količina
-                                    columns.RelativeColumn();     // Jedinica
+                                    columns.RelativeColumn();     
+                                    columns.RelativeColumn(3);    
+                                    columns.RelativeColumn();     
+                                    columns.RelativeColumn();     
                                 });
 
                                 table.Header(header =>
